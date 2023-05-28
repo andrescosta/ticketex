@@ -13,7 +13,6 @@ class EntityRepository:
     client = AsyncIOMotorClient("mongodb://root:example@localhost:27017")
     db = client["tick_user"]
     collection = db["users"]
-    entitytype=None
 
     def __init__(self, entitytype) -> None:
         self.entitytype=entitytype
