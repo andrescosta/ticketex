@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
 from app.api.v1 import users
-from app.api.v1.handlers import entity_not_found_error_exception_handler
-from app.repository.entity_not_found_error import EntityNotFoundError
+from tiklib.api.handlers import entity_not_found_error_exception_handler
+from tiklib.repository.entity_not_found_error import EntityNotFoundError
 
 v1_api_router = APIRouter()
 v1_api_router.include_router(users.router, prefix="/v1/users", tags=["users"])
