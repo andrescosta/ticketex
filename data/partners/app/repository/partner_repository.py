@@ -9,7 +9,7 @@ class PartnerRepository(EntityRepository):
 
     def __init__(self) -> None:
         super().__init__(type(Partner()))
-
+    
     @property
     def collection(self):
         return self.mycollection

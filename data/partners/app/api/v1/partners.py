@@ -8,12 +8,11 @@ router = APIRouter()
 
 @router.post("", response_model=Partner)
 async def post(*, partner: Partner):
-    print("aaa")
     newpartner = await repository.partner.save(partner)
     return newpartner
 
 
-@router.get("/{partner_id}")
+@router.get("/{partner_id}", response_model=Partner)
 async def get(partner_id: str):
     partner = await repository.partner.get(partner_id)
     return partner

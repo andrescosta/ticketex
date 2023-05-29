@@ -6,7 +6,7 @@ from app.models import Adventure
 router = APIRouter()
 
 
-@router.post("/", response_model=Adventure)
+@router.post("", response_model=Adventure)
 async def post(*, adventure: Adventure):
     newuser = await repository.adventure.save(adventure)
     return newuser
