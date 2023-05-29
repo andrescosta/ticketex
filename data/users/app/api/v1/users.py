@@ -20,8 +20,7 @@ async def get(user_id: str):
 
 @router.put("/{user_id}")
 async def put(user_id: str, user: User):
-    user.id = user_id
-    await repository.user.update(user)
+    await repository.user.update(user_id, user)
     return user
 
 
