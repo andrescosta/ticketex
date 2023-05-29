@@ -2,10 +2,12 @@ from typing import List, Optional
 from app.models.address import Address
 from tiklib.models.entity import Entity
 
+from app.models.ticket import Ticket
+from app.models.venue import Venue
+
 
 class Adventure(Entity):
-    email: Optional[str]
-    fullname: Optional[str]
-    phone: Optional[str]
-    ext_id: Optional[str]
-    address: Optional[Address]
+    name: Optional[str]
+    description: Optional[str]
+    tickets: Optional[List[Ticket]]
+    venue: Optional[Venue]
