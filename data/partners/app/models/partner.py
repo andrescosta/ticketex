@@ -1,9 +1,9 @@
 from typing import List, Optional
+from odmantic import Model
 from app.models.address import Address
-from tiklib.models.entity import Entity
 
 
-class Partner(Entity):
+class Partner(Model):
     email: Optional[str]
     name: Optional[str]
     phone: Optional[str]

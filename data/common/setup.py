@@ -7,5 +7,5 @@ setup(
     author='Me',
     license='MIT',
     install_requires=[],
-    setup_requires=['motor','pydantic','fastapi'],
+    setup_requires=['motor','fastapi'],
 )
