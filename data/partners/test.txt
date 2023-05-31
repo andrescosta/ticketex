@@ -4,6 +4,7 @@ curl -X DELETE http://localhost:8000/v1/partners/64724380e7c90b56ccf5b88a
 curl -X GET http://localhost:8000/v1/partners/6470d7fe55a5d96e095ecae3
 
 curl -X POST -H "Content-Type: application/json" -d '{
+  "id":"string",
   "email": "string",
   "name": "string",
   "phone": "string",

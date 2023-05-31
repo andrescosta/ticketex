@@ -1,4 +1,5 @@
 from abc import ABC, abstractproperty
+from ast import Dict
 from types import SimpleNamespace
 from typing import Any
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -24,7 +25,8 @@ class EntityRepository:
         self.__collection=self.__db[self.collection_name(entity_type)]
 
     async def save(self, entity:Entity)->Entity:
-        result = await self.collection().insert_one(entity.dict())
+        entity_dict = self.for_saving(entity)
+        result = await self.collection().insert_one(entity_dict)
         nentity = copy.copy(entity)
         nentity.id = str(result.inserted_id); 
         return nentity
@@ -38,7 +40,7 @@ class EntityRepository:
             raise EntityNotFoundError(id, self.entity_type)
 
     async def update(self, id:str, entity:Entity)->Entity:
-        entity_dict = entity.dict(exclude_unset=True)
+        entity_dict = self.for_saving(entity)
         result = await self.collection().update_one({"_id": ObjectId(id)}, {"$set": entity_dict})
         if result.matched_count==0:
             raise EntityNotFoundError(id, self.entity_type)
@@ -55,3 +57,8 @@ class EntityRepository:
     
     def collection(self)->Collection:
         return self.__collection
+
+    def for_saving(self, entity:Entity)->dict[str, Any]:
+        entity_dict = entity.dict(exclude_unset=True)
+        entity_dict.pop("id", None)
+        return entity_dict
