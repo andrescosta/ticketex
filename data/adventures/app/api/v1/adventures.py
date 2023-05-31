@@ -5,23 +5,21 @@ from app.models import Adventure
 
 router = APIRouter()
 
-
 @router.post("", response_model=Adventure)
-async def post(*, adventure: Adventure):
-    newuser = await repository.adventure.save(adventure)
-    return newuser
-
+async def post(adventure: Adventure):
+    res = await repository.adventure.save(adventure)
+    return res
 
 @router.get("/{adventure_id}")
 async def get(adventure_id: str):
-    user = await repository.adventure.get(adventure_id)
-    return user
+    res = await repository.adventure.get(adventure_id)
+    return res
 
 
 @router.put("/{adventure_id}")
 async def put(adventure_id: str, adventure: Adventure):
-    await repository.adventure.update(adventure_id, adventure)
-    return adventure
+    res = await repository.adventure.update(adventure_id, adventure)
+    return res
 
 
 @router.delete("/{adventure_id}")

@@ -1,6 +1,10 @@
+from typing import Optional
+
+
 class EntityNotFoundError(Exception):
-    entity_type = None
-    def __init__(self, id,entity_type ):
+    entity_type:type
+
+    def __init__(self, id:str,entity_type:type ):
         self.id = id
         self.entity_type = entity_type
     
