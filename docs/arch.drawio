@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-05-31T19:04:52.868Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="xT4Yj0-0omydPD3ON_oY" version="21.2.8" type="device" pages="4">
+<mxfile host="Electron" modified="2023-05-31T19:06:23.082Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="pNIPoyPYvFmYz-vohOGW" version="21.2.8" type="device" pages="4">
   <diagram name="Intro" id="1p8Vnag_sHgWTCmwgpqx">
     <mxGraphModel dx="779" dy="590" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -388,7 +388,7 @@
         <mxCell id="7KSpRn9VMjLn9ZuzdqO3-8" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="2v26pyEeVzZE52HxjGk--1" source="wry_IhXYracVsNeRviy--1" target="2v26pyEeVzZE52HxjGk--7" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wry_IhXYracVsNeRviy--1" value="Kong &lt;br&gt;API Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="2v26pyEeVzZE52HxjGk--1" vertex="1">
+        <mxCell id="wry_IhXYracVsNeRviy--1" value="API Gateway&lt;br&gt;(Kong)&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="2v26pyEeVzZE52HxjGk--1" vertex="1">
           <mxGeometry x="-170" y="-340" width="560" height="60" as="geometry" />
         </mxCell>
         <mxCell id="0A6rbloWDj_MAUepcOho-0" value="Stripe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1E4F7;strokeColor=#9673a6;" parent="2v26pyEeVzZE52HxjGk--1" vertex="1">
