@@ -14,14 +14,14 @@ async def post(*, partner: Partner):
 
 @router.get("/{partner_id}", response_model=Partner)
 async def get(partner_id: str):
-    partner = await repository.partner.get(partner_id)
-    return partner
+    res = await repository.partner.get(partner_id)
+    return res
 
 
 @router.put("/{partner_id}")
 async def put(partner_id: str, partner: Partner):
-    await repository.partner.update(partner_id, partner)
-    return partner
+    res = await repository.partner.update(partner_id, partner)
+    return res
 
 
 @router.delete("/{partner_id}")

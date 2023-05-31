@@ -5,8 +5,7 @@ from app.models import User
 
 router = APIRouter()
 
-
-@router.post("/", response_model=User)
+@router.post("", response_model=User)
 async def post(*, user: User):
     newuser = await repository.user.save(user)
     return newuser
@@ -14,14 +13,14 @@ async def post(*, user: User):
 
 @router.get("/{user_id}")
 async def get(user_id: str):
-    user = await repository.user.get(user_id)
-    return user
+    res = await repository.user.get(user_id)
+    return res
 
 
 @router.put("/{user_id}")
 async def put(user_id: str, user: User):
-    await repository.user.update(user_id, user)
-    return user
+    res = await repository.user.update(user_id, user)
+    return res
 
 
 @router.delete("/{user_id}")
