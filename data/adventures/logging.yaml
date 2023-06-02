@@ -1,0 +1,33 @@
+version: 1
+disable_existing_loggers: false
+loggers:
+  root:
+    level: DEBUG
+    handlers: [console,errorConsole]
+  app:
+    level: DEBUG
+    handlers: [console,errorConsole]
+    qualname: app_aventures
+    propagate: 0
+  tiklib:
+    level: DEBUG
+    handlers: [console,errorConsole]
+    qualname: tiklib
+    propagate: 0
+   
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: normal
+    stream: ext://sys.stdout
+  errorConsole:
+    class: logging.StreamHandler
+    level: ERROR
+    formatter: error
+    stream: ext://sys.stdout
+formatters:
+  error:
+    format: "%(levelname)s <PID %(process)d:%(processName)s> %(name)s.%(funcName)s(): %(message)s"
+  normal:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
