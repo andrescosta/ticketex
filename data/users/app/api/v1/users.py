@@ -2,8 +2,10 @@ from fastapi import APIRouter
 from fastapi.responses import Response
 from app import repository
 from app.models import User
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("", response_model=User)
 async def post(*, user: User):
@@ -16,11 +18,10 @@ async def get(user_id: str):
     res = await repository.user.get(user_id)
     return res
 
-
 @router.put("/{user_id}")
 async def put(user_id: str, user: User):
-    res = await repository.user.update(user_id, user)
-    return res
+    uuser = await repository.user.update(user_id, user)
+    return uuser
 
 
 @router.delete("/{user_id}")

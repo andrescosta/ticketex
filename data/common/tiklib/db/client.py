@@ -2,6 +2,9 @@ from fastapi import Depends, FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.database import Database
 from tiklib.common import app_settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 __client:AsyncIOMotorClient = None
 
@@ -13,8 +16,9 @@ async def connect_client():
     global __client
     try:
         __client = AsyncIOMotorClient(app_settings.DATABASE_URL)
+        logger.debug("Mongo connection was initialized.")
     except Exception as e:
-        print(e)
+        logger.error("Error initializing Mongo connection.")
         raise
 
 def get_db()->Database:
@@ -23,9 +27,9 @@ def get_db()->Database:
 async def close_client():
     global __client
     if __client is None:
-        print('Connection is None, nothing to close.')
+        logger.warn("Connection is None, nothing to close.")
         return
     __client.close()
     __client = None
-    print('Mongo connection closed.')
+    logger.debug("Mongo connection closed.")
 

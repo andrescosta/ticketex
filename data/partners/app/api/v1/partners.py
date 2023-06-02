@@ -1,10 +1,10 @@
+import logging
 from fastapi import APIRouter
 from fastapi.responses import Response
 from app import repository
 from app.models import Partner
 
 router = APIRouter()
-
 
 @router.post("", response_model=Partner)
 async def post(*, partner: Partner):
