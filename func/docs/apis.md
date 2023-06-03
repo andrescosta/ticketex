@@ -3,9 +3,8 @@
 ## Reservations
 
 ```HTTP
-POST/GET /reservation
+POST /reservation
 {
-    "id":"aaaaaaa"
     "adventure":{
         "id":"aaaaa"
     },
@@ -17,6 +16,22 @@ POST/GET /reservation
         }
     ]
 }
+
+GET /reservation
+{
+    "id":"aaaaaaa",
+    "adventure":{
+        "id":"aaaaa"
+    },
+    "capacity"[
+        {
+            "type":"vip",
+            "current":100,
+            "max":1000
+        }
+    ]
+}
+
 ```
 
 PATCH /reservation/{id}
