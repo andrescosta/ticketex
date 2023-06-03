@@ -89,6 +89,7 @@ PATCH /reservation/{id}/users/{id}/action/returned
 
 ## Tickets
 
+```HTTP
 POST /tickets/reservation/{id}
 (will validate with partner if the cc was charged using proc_id )
 {
@@ -100,14 +101,19 @@ POST /tickets/reservation/{id}
     "human_readable_id":"111111111"
 }
 (will create a record in the database ("reservation_id","human_readable_id") with expiration_time)
+```
+
+```HTTP
 GET /tickets/human/{human_readable_id}
 {
     "id":"11111111111",
     "human_readable_id":"111111111"
 }
+```
 
 ## preferences
 
+```HTTP
 POST /users/{user_id}/preferences
 {
     "channels":[
@@ -119,6 +125,9 @@ POST /users/{user_id}/preferences
         }
     ]
 }
+```
+
+```HTTP
 GET /users/{user_id}/preferences/channels?type=[tickets|profile]
 {
     {
@@ -128,10 +137,11 @@ GET /users/{user_id}/preferences/channels?type=[tickets|profile]
         "type":"[tickets|profile]"
     }
 }
-
+```
 
 ## Messaging
 
+```HTTP
 POST /messages/{user_id}
 {
     "type":["reservation","devolution","expiration"],
@@ -149,7 +159,8 @@ POST /messages/{user_id}
 {
     "id":""
 }
-
+```
+```HTTP
 GET /messages/{user_id}
 {
     [
@@ -159,3 +170,4 @@ GET /messages/{user_id}
         }
     ]
 }
+```
