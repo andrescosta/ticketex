@@ -39,7 +39,8 @@ PATCH /reservation/{id}
     "capacity"[
         {
             "type":"vip",
-            "max":1000
+            "max":1000 
+            (max must be bigger than current max. if not, error)
         }
     ]
 }
@@ -48,7 +49,7 @@ PATCH /reservation/{id}
 ```HTTP
 POST /reservation/{id}/users/{id}
 {} // EMPTY BODY
-(create with status pending_confirmation)
+(creates with status pending_confirmation)
 
 {
     "id":"aaaaaaaaaaa",
@@ -76,31 +77,32 @@ GET /reservation/{id}/users/{id}
 ```HTTP
 PATCH /reservation/{id}/users/{id}/action/confirmed 
 (only if the status is pending_confirmation)
-(move to status pending_payment)
+(moves to status pending_payment)
 
 PATCH /reservation/{id}/users/{id}/action/paid 
 (only if the status is pending_payment)
-(move to status reserved)
+(moves to status reserved)
 
 PATCH /reservation/{id}/users/{id}/action/returned 
-(will be marked as deleted. get will not return it)
-(will increase available capacity to 1)
+(masks as deleted. "get" will not return it)
+(increases available capacity to 1)
 ```
 
 ## Tickets
 
 ```HTTP
 POST /tickets/reservation/{id}
-(will validate with partner if the cc was charged using proc_id )
+(calls payment processing partner to validate if the cc was charged using proc_id )
 {
     "proc_id"
 }
 
 {
     "id":"11111111111",
-    "human_readable_id":"111111111"
+    "human_readable_id":"111111111",
+    "status"[paid|error_partner]
 }
-(will create a record in the database ("reservation_id","human_readable_id") with expiration_time)
+(creates a record in the database ("reservation_id","human_readable_id") with expiration_time)
 ```
 
 ```HTTP
