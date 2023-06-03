@@ -8,14 +8,20 @@ curl -X POST -H "Content-Type: application/json" -d '
 {"email":"1@example.com","fullname":"John Doe","phone":"1234567890","ext_id":"abc123xyz","preferences": [{"name": "rock", "notif": True},{"name": "pop", "notif": False}]}' http://localhost:8000/v1/users/
 
 curl -X POST -H "Content-Type: application/json" -d '{
+  "id": "string",
   "email": "string",
   "fullname": "string",
   "phone": "string",
   "ext_id": "string",
   "preferences": [
     {
-      "name": "string",
-      "notif": true
+      "channels": [
+        {
+          "value": "string",
+          "channel_type": "email",
+          "message_type": "tickets"
+        }
+      ]
     }
   ],
   "address": {

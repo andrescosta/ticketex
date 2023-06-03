@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
+from app.models.channel import Channel
 
 class Preference(BaseModel):
-    name: Optional[str]
-    notif: Optional[bool]
+    channels: Optional[List[Channel]]
