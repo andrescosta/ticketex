@@ -31,9 +31,9 @@ GET /reservation
         }
     ]
 }
-
 ```
 
+```HTTP
 PATCH /reservation/{id}
 {
     "capacity"[
@@ -43,7 +43,9 @@ PATCH /reservation/{id}
         }
     ]
 }
+```
 
+```HTTP
 POST /reservation/{id}/users/{id}
 {} // EMPTY BODY
 (create with status pending_confirmation)
@@ -57,6 +59,7 @@ POST /reservation/{id}/users/{id}
         "id":"aaa"
     }
 }
+````
 
 GET /reservation/{id}/users/{id}
 {
