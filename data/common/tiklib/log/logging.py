@@ -1,6 +1,5 @@
 import logging
 import yaml
-import coloredlogs
 import random
 import string
 import time
@@ -12,11 +11,9 @@ def init_log(logfile:str="logging.yaml"):
         with open(logfile,"rt") as stream:
             config = yaml.safe_load(stream)
             logging.config.dictConfig(config)
-        coloredlogs.install()
     except Exception as e:
         print(f'Error reading {logfile}: "{e}". Setting log level as info')
         logging.basicConfig(level=logging.INFO)
-        coloredlogs.install(level=logging.INFO)
 
 def add_request_timing_log(app:FastAPI, logger:logging.Logger):
     @app.middleware("http")
