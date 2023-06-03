@@ -61,6 +61,8 @@ POST /reservation/{id}/users/{id}
 }
 ````
 
+```HTTP
+
 GET /reservation/{id}/users/{id}
 {
     "id":"aaaaaaaaaaa",
@@ -70,16 +72,20 @@ GET /reservation/{id}/users/{id}
         "id":"aaa"
     }
 }
-
+```
+```HTTP
 PATCH /reservation/{id}/users/{id}/action/confirmed 
 (only if the status is pending_confirmation)
 (move to status pending_payment)
+
 PATCH /reservation/{id}/users/{id}/action/paid 
 (only if the status is pending_payment)
 (move to status reserved)
+
 PATCH /reservation/{id}/users/{id}/action/returned 
 (will be marked as deleted. get will not return it)
 (will increase available capacity to 1)
+```
 
 ## Tickets
 
