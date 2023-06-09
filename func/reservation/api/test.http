@@ -1,0 +1,16 @@
+POST /reservations
+Host: localhost:8080
+Content-Type: application/json
+
+{
+     "adventure":{
+        "id":"aaaaa"
+    },
+    "capacity":
+        {
+            "type":"vip",
+            "current":100,
+            "max":1000
+        }
+    
+}
