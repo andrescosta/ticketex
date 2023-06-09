@@ -1,32 +1,28 @@
 # Resources
 
 ## Reservations
-
+s
 ```HTTP
 POST /reservation
 {
-    "adventure":{
-        "id":"aaaaa"
-    },
-    "capacity"[
+    "adventure_id":"aaaaa",
+    "status":"closed"
+    "capacity":[
         {
             "type":"vip",
-            "current":100,
             "max":1000
         }
     ]
 }
 
-GET /reservation
+GET /reservation/{adventure_id}
 {
-    "id":"aaaaaaa",
-    "adventure":{
-        "id":"aaaaa"
-    },
-    "capacity"[
+    "adventure_id":"aaaaa",
+    "status":open
+    "capacity":[
         {
             "type":"vip",
-            "current":100,
+            "current":0,
             "max":1000
         }
     ]
@@ -34,37 +30,38 @@ GET /reservation
 ```
 
 ```HTTP
-PATCH /reservation/{id}
+PATCH /reservation/{adventure_id}/capacity/{type}
 {
-    "capacity"[
-        {
-            "type":"vip",
-            "max":1000 
-            (max must be bigger than current max. if not, error)
-        }
-    ]
+    "max":1000 
+    (max must be bigger than current max. if not, error)
 }
 ```
 
 ```HTTP
-POST /reservation/{id}/users/{id}
+POST /reservation/{adventure_id}/capacity
+{
+    "type":aaaaa,
+    "max":1000 
+    (max must be bigger than current max. if not, error)
+}
+```
+
+
+```HTTP
+POST /reservation/{adventure_id}/{type}/users/{id}/
 {} // EMPTY BODY
 (creates with status pending_confirmation)
 
 {
-    "id":"aaaaaaaaaaa",
-    "human_id":"aaaaaaaaaa",
-    "status":pending_confirmation
-    "expiration": date
-    "user":{
-        "id":"aaa"
-    }
+    "id":"aaaaaaaaaa",
+    "status":pending_confirmation,
+    "expiration": date,
 }
 ````
 
 ```HTTP
 
-GET /reservation/{id}/users/{id}
+GET /reservation/{adventure_id}/{type}/users/{id}/
 {
     "id":"aaaaaaaaaaa",
     "status":[reserved,pending_confirmation,pending_payment]
@@ -75,15 +72,15 @@ GET /reservation/{id}/users/{id}
 }
 ```
 ```HTTP
-PATCH /reservation/{id}/users/{id}/action/confirmed 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/action/confirmed 
 (only if the status is pending_confirmation)
 (moves to status pending_payment)
 
-PATCH /reservation/{id}/users/{id}/action/paid 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/action/paid 
 (only if the status is pending_payment)
 (moves to status reserved)
 
-PATCH /reservation/{id}/users/{id}/action/returned 
+PATCH /reservation/{id}/users/{id}/action/cancelled 
 (masks as deleted. "get" will not return it)
 (increases available capacity to 1)
 ```
