@@ -1,7 +1,7 @@
 # Resources
 
 ## Reservations
-s
+
 ```HTTP
 POST /reservation
 {
@@ -49,7 +49,9 @@ POST /reservation/{adventure_id}/capacity
 
 ```HTTP
 POST /reservation/{adventure_id}/{type}/users/{id}/
-{} // EMPTY BODY
+{
+    "quantity":1
+} 
 (creates with status pending_confirmation)
 
 {
@@ -63,12 +65,10 @@ POST /reservation/{adventure_id}/{type}/users/{id}/
 
 GET /reservation/{adventure_id}/{type}/users/{id}/
 {
-    "id":"aaaaaaaaaaa",
+    "adventure_id":"aaaaaaaaaaa",
     "status":[reserved,pending_confirmation,pending_payment]
     "expiration": [date|empty for reserved]
-    "user":{
-        "id":"aaa"
-    }
+    "user_id":"aaa"
 }
 ```
 ```HTTP

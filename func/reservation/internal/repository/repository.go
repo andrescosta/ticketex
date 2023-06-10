@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -23,25 +24,33 @@ type CassandraDataAccess struct {
 	Session *gocql.Session
 }
 
-func (d *CassandraDataAccess) GetReservations() ([]model.Reservation, error) {
-	var reservations []model.Reservation
-
-	iter := d.Session.Query("SELECT * FROM reservations").Iter()
+func (d *CassandraDataAccess) GetReservations(id int) (model.Reservation, error) {
+	iter := d.Session.Query("SELECT adventure_id,status,type,max_people,availability FROM reservations WHERE adventure_id=?", id).Iter()
 	var reservation model.Reservation
-	for iter.Scan(&reservation.ID, &reservation.Adventure.ID, &reservation.Capacity.Type, &reservation.Capacity.Current, &reservation.Capacity.Max) {
-		reservations = append(reservations, reservation)
+	var capacity model.Capacity
+	for iter.Scan(&reservation.Adventure_id, &reservation.Status, &capacity.Type, &capacity.Max, &capacity.Availability) {
+		reservation.Capacity = append(reservation.Capacity, capacity)
 	}
 	if err := iter.Close(); err != nil {
-		return nil, err
+		return reservation, err
 	}
 
-	return reservations, nil
+	return reservation, nil
 }
 
 func (d *CassandraDataAccess) CreateReservation(reservation model.Reservation) error {
-	query := d.Session.Query("INSERT INTO reservations (id, adventure, capacity) VALUES (?, ?, ?)",
-		reservation.ID, reservation.Adventure.ID, reservation.Capacity)
-	return query.Exec()
+	ctx := context.Background()
+
+	b := d.Session.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
+
+	for _, v := range reservation.Capacity {
+		b.Entries = append(b.Entries, gocql.BatchEntry{
+			Stmt:       "INSERT INTO reservations (adventure_id,status,type,max_people,availability) VALUES (?, ?, ?, ?, ?)",
+			Args:       []interface{}{reservation.Adventure_id, reservation.Status, v.Type, v.Max, v.Availability},
+			Idempotent: true,
+		})
+	}
+	return d.Session.ExecuteBatch(b)
 }
 
 func (d *CassandraDataAccess) PatchReservation(reservation model.Reservation) error {
