@@ -6,46 +6,36 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gocql/gocql"
-	"github.com/gorilla/mux"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/andrescosta/ticketex/func/reservation/internal/handler"
 	"github.com/andrescosta/ticketex/func/reservation/internal/repository"
+	"github.com/andrescosta/ticketex/func/reservation/internal/resource"
 )
 
 type Config struct {
-	CassandraHosts    string `json:"cassandra_hosts"`
-	CassandraKeyspace string `json:"cassandra_keyspace"`
+	PostgressDsn string `json:"postgress_dsn"`
 }
 
 func main() {
 	config := loadConfig()
-	cluster := gocql.NewCluster(config.CassandraHosts)
-	cluster.Keyspace = config.CassandraKeyspace
-	session, err := cluster.CreateSession()
-	if err != nil {
-		log.Fatal("Failed to connect to Cassandra:", err)
-	}
-	defer session.Close()
-
-	dataAccess := &repository.CassandraDataAccess{Session: session}
+	dataAccess := &repository.PostgressDataAccess{}
+	dataAccess.Init(config.PostgressDsn)
+	reservation := resource.ReservationResource{DataAccess: dataAccess}
 
 	// Create the router
-	router := mux.NewRouter()
-	router.Use(otelmux.Middleware("reservation-service"))
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Mount("/reservations", reservation.Routes())
 
 	// Define the routes
-	router.HandleFunc("/reservations", handler.GetReservationsHandler(dataAccess)).Methods(http.MethodGet)
-	router.HandleFunc("/reservations", handler.CreateReservationHandler(dataAccess)).Methods(http.MethodPost)
-	router.HandleFunc("/reservations/{id}", handler.PatchReservationHandler(dataAccess)).Methods(http.MethodPatch)
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe("localhost:8080", router))
 	println("Started")
 }
 
 func loadConfig() Config {
-	file, err := os.Open("./config.json")
+	file, err := os.Open("../config.json")
 	if err != nil {
 		log.Fatal("Failed to open config file:", err)
 	}

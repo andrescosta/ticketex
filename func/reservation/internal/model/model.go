@@ -1,7 +1,9 @@
 package model
 
-type ReservationStatus int64
-type ReservationUserStatus int64
+import "strings"
+
+type ReservationStatus uint
+type ReservationUserStatus uint
 
 const (
 	Closed ReservationStatus = iota
@@ -17,6 +19,18 @@ const (
 	Canceled
 )
 
+func ToReservationUserStatus(s string) ReservationUserStatus {
+	switch strings.ToLower(s) {
+	case "pending":
+		return Pending
+	case "reserved":
+		return Reserved
+	case "canceled":
+		return Canceled
+	}
+	return Pending
+}
+
 type Reservation struct {
 	Adventure_id string            `json:"adventure_id"`
 	Status       ReservationStatus `json:"status"`
@@ -25,8 +39,8 @@ type Reservation struct {
 
 type Capacity struct {
 	Type         string `json:"type"`
-	Availability int    `json:"availability"`
-	Max          int    `json:"max"`
+	Availability uint   `json:"availability"`
+	Max          uint   `json:"max"`
 }
 
 type ReservationUser struct {

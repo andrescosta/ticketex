@@ -72,15 +72,15 @@ GET /reservation/{adventure_id}/{type}/users/{id}/
 }
 ```
 ```HTTP
-PATCH /reservation/{adventure_id}/{type}/users/{id}/action/confirmed 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/status/confirmed 
 (only if the status is pending_confirmation)
 (moves to status pending_payment)
 
-PATCH /reservation/{adventure_id}/{type}/users/{id}/action/paid 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/status/paid 
 (only if the status is pending_payment)
 (moves to status reserved)
 
-PATCH /reservation/{id}/users/{id}/action/cancelled 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/status/cancelled 
 (masks as deleted. "get" will not return it)
 (increases available capacity to 1)
 ```

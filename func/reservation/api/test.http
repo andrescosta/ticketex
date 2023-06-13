@@ -3,14 +3,67 @@ Host: localhost:8080
 Content-Type: application/json
 
 {
-     "adventure":{
-        "id":"aaaaa"
-    },
-    "capacity":
+    "adventure_id": "ifdfffff1i",
+    "status":1,
+    "capacities":[
         {
             "type":"vip",
-            "current":100,
+            "availability":1000,
             "max":1000
+        },
+        {
+            "type":"popular",
+            "availability":1000,
+            "max":10000
+        },
+        {
+            "type":"free",
+            "availability":100,
+            "max":100
         }
-    
+    ]
 }
+
+###
+
+GET /reservations/ifdffff1i
+Host: localhost:8080
+Content-Type: application/json
+
+###
+
+PATCH /reservations/ifdffff1i/capacities/vip
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "max":3,
+    "availability":7
+}
+
+###
+POST /reservations/ifdffff1i/capacities/
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "type":"aa1aaa",
+    "max":19,
+    "availability":30
+}
+
+###
+
+POST /reservations/ifdffff1i/capacities/popular/users/123
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "quantity":2
+} 
+
+###
+
+PATCH /reservations/ifdffff1i/capacities/vip/users/123/status/reserved 
+Host: localhost:8080
+Content-Type: application/json

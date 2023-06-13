@@ -1,18 +1,28 @@
-version: '3.9'
+version: "3.8"
 
 networks:
-  funcnet:
-    name: funcnet
+  backend:
+    name: app
     driver: bridge
-
+volumes:
+  postgres_func_data:
+    driver: local
 services:
-  cassandra:
-    image: cassandra:latest
-    ports:
-      - 9042:9042
+  postgres-db-f:
+    image: postgres:15
+    restart: always
     volumes:
-      - ~/apps/cassandra:/var/lib/cassandra
-    environment:
-      - CASSANDRA_CLUSTER_NAME=cloudinfra
+      - postgres_func_data:/var/lib/postgresql/data
     networks:
-      - funcnet
+      - backend
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 1m
+      timeout: 10s
+      retries: 2

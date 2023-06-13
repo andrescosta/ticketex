@@ -1,74 +1,109 @@
 package repository
 
 import (
-	"context"
-	"fmt"
-	"strings"
+	"log"
+	"os"
+	"time"
 
-	"github.com/andrescosta/ticketex/func/reservation/internal/model"
-	"github.com/gocql/gocql"
+	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-type Config struct {
-	CassandraHosts    string `json:"cassandra_hosts"`
-	CassandraKeyspace string `json:"cassandra_keyspace"`
-}
-
 type DataAccess interface {
-	GetReservations() ([]model.Reservation, error)
-	CreateReservation(reservation model.Reservation) error
-	PatchReservation(reservation model.Reservation) error
+	Init(dsn string) error
+	GetReservation(reservation entity.Reservation) (entity.Reservation, []entity.ReservationCapacity, error)
+	CreateReservations(reservation entity.Reservation,
+		reservationCapacities []entity.ReservationCapacity) error
+	PatchReservation(reservation entity.Reservation) error
+	PatchReservationCapacity(reservationCapacity entity.ReservationCapacity) error
+	PostReservationCapacity(reservationCapacity entity.ReservationCapacity) error
+	PostReservationUser(reservationCapacity entity.ReservationUser) error
+	PatchReservationUser(reservationUser entity.ReservationUser) error
 }
 
-type CassandraDataAccess struct {
-	Session *gocql.Session
+type PostgressDataAccess struct {
+	DB *gorm.DB
 }
 
-func (d *CassandraDataAccess) GetReservations(id int) (model.Reservation, error) {
-	iter := d.Session.Query("SELECT adventure_id,status,type,max_people,availability FROM reservations WHERE adventure_id=?", id).Iter()
-	var reservation model.Reservation
-	var capacity model.Capacity
-	for iter.Scan(&reservation.Adventure_id, &reservation.Status, &capacity.Type, &capacity.Max, &capacity.Availability) {
-		reservation.Capacity = append(reservation.Capacity, capacity)
-	}
-	if err := iter.Close(); err != nil {
-		return reservation, err
-	}
+func (d *PostgressDataAccess) Init(dsn string) error {
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      false,       // Don't include params in the SQL log
+			Colorful:                  false,       // Disable color
+		},
+	)
 
-	return reservation, nil
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: newLogger})
+	if err != nil {
+		print(err)
+		return err
+	}
+	d.DB = db
+	println("creating schema ...")
+	err = db.AutoMigrate(&entity.Reservation{}, &entity.ReservationCapacity{}, &entity.ReservationUser{})
+	if err != nil {
+		print(err)
+		return err
+	}
+	println("end creating schema ...")
+	return nil
 }
 
-func (d *CassandraDataAccess) CreateReservation(reservation model.Reservation) error {
-	ctx := context.Background()
-
-	b := d.Session.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
-
-	for _, v := range reservation.Capacity {
-		b.Entries = append(b.Entries, gocql.BatchEntry{
-			Stmt:       "INSERT INTO reservations (adventure_id,status,type,max_people,availability) VALUES (?, ?, ?, ?, ?)",
-			Args:       []interface{}{reservation.Adventure_id, reservation.Status, v.Type, v.Max, v.Availability},
-			Idempotent: true,
-		})
+func (d *PostgressDataAccess) GetReservation(reservation entity.Reservation) (entity.Reservation, []entity.ReservationCapacity, error) {
+	var reservationq = entity.Reservation{Adventure_id: reservation.Adventure_id}
+	var reservationr entity.Reservation
+	var reservationc []entity.ReservationCapacity
+	if err := d.DB.First(&reservationr, reservationq); err.Error != nil {
+		return reservationr, reservationc, err.Error
 	}
-	return d.Session.ExecuteBatch(b)
+
+	if err := d.DB.Find(&reservationc, reservationq); err.Error != nil {
+		return reservationr, reservationc, err.Error
+	}
+	return reservationr, reservationc, nil
 }
 
-func (d *CassandraDataAccess) PatchReservation(reservation model.Reservation) error {
-	var fields []string
-	var args []interface{}
+func (d *PostgressDataAccess) CreateReservations(reservation entity.Reservation, reservationCapacities []entity.ReservationCapacity) error {
+	return d.DB.Transaction(func(tx *gorm.DB) error {
+		if res := tx.Create(&reservation); res.Error != nil {
+			return res.Error
+		}
+		for _, reservationCapacity := range reservationCapacities {
+			if res := tx.Create(&reservationCapacity); res.Error != nil {
+				return res.Error
+			}
+		}
+		return nil
+	})
+}
 
-	if reservation.Adventure.ID != "" {
-		fields = append(fields, "adventure = ?")
-		args = append(args, reservation.Adventure.ID)
-	}
-	if reservation.Capacity.Type != "" {
-		fields = append(fields, "capacity = ?")
-		args = append(args, reservation.Capacity)
-	}
+func (d *PostgressDataAccess) PatchReservation(reservation entity.Reservation) error {
+	result := d.DB.Updates(&reservation)
+	return result.Error
+}
 
-	queryString := fmt.Sprintf("UPDATE reservations SET %s WHERE id = ?", strings.Join(fields, ", "))
-	args = append(args, reservation.ID)
-	query := d.Session.Query(queryString, args...)
+func (d *PostgressDataAccess) PatchReservationCapacity(reservationCapacity entity.ReservationCapacity) error {
+	result := d.DB.Updates(&reservationCapacity)
+	return result.Error
+}
 
-	return query.Exec()
+func (d *PostgressDataAccess) PostReservationCapacity(reservationCapacity entity.ReservationCapacity) error {
+	result := d.DB.Create(&reservationCapacity)
+	return result.Error
+}
+
+func (d *PostgressDataAccess) PostReservationUser(reservationUser entity.ReservationUser) error {
+	result := d.DB.Create(&reservationUser)
+	return result.Error
+}
+
+func (d *PostgressDataAccess) PatchReservationUser(reservationUser entity.ReservationUser) error {
+	result := d.DB.Updates(&reservationUser)
+	return result.Error
 }
