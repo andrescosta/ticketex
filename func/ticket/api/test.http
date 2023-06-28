@@ -1,0 +1,61 @@
+POST /tickets/tes1/ada/11
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "Credit_Card_TX_ID":"aaaaaaaaa",
+    "Quantity":4
+}
+
+###
+
+GET /tickets/tes1/ada/11
+Host: localhost:8080
+Content-Type: application/json
+
+###
+
+PATCH /reservations/metadata/newsar/capacities/vip
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "availability":10002
+}
+
+###
+POST /reservations/metadata/newsar/capacities/
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "type":"lapop",
+    "availability":30
+}
+
+###
+
+POST /reservations/newsar/capacities/vip/users/12345678
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "quantity":1
+} 
+###
+GET /reservations/newsar/capacities/vip/users/12345678
+Host: localhost:8080
+Content-Type: application/json
+
+###
+
+PATCH /reservations/newsar/capacities/vip/users/1234567/status/reserved 
+Host: localhost:8080
+Content-Type: application/json
+
+###
+
+PATCH /reservations/newsar/capacities/vip/users/123456/status/canceled 
+Host: localhost:8080
+Content-Type: application/json
+

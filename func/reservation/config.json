@@ -1,0 +1,6 @@
+{
+    "postgress_dsn":"host=localhost user=postgres password=mysecretpassword dbname=resv sslmode=disable",
+    "host":"localhost:8080",
+    "debug_sql":false
+
+}

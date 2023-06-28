@@ -3,6 +3,16 @@
 *.bak
 backup/
 
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+go.work
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

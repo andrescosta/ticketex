@@ -3,30 +3,26 @@
 ## Reservations
 
 ```HTTP
-POST /reservation
+POST /reservation/metadata
 {
-    "adventure":{
-        "id":"aaaaa"
-    },
-    "capacity"[
+    "adventure_id":"aaaaa",
+    "status":"closed"
+    "capacity":[
         {
             "type":"vip",
-            "current":100,
             "max":1000
         }
     ]
 }
 
-GET /reservation
+GET /reservation/metadata/{adventure_id}
 {
-    "id":"aaaaaaa",
-    "adventure":{
-        "id":"aaaaa"
-    },
-    "capacity"[
+    "adventure_id":"aaaaa",
+    "status":open
+    "capacity":[
         {
             "type":"vip",
-            "current":100,
+            "current":0,
             "max":1000
         }
     ]
@@ -34,56 +30,57 @@ GET /reservation
 ```
 
 ```HTTP
-PATCH /reservation/{id}
+PATCH /reservation/metadata/{adventure_id}/capacity/{type}
 {
-    "capacity"[
-        {
-            "type":"vip",
-            "max":1000 
-            (max must be bigger than current max. if not, error)
-        }
-    ]
+    "max":1000 
+    (max must be bigger than current max. if not, error)
 }
 ```
 
 ```HTTP
-POST /reservation/{id}/users/{id}
-{} // EMPTY BODY
+POST /reservation/metadata/{adventure_id}/capacity
+{
+    "type":aaaaa,
+    "max":1000 
+    (max must be bigger than current max. if not, error)
+}
+```
+
+
+```HTTP
+POST /reservation/{adventure_id}/{type}/users/{id}/
+{
+    "quantity":1
+} 
 (creates with status pending_confirmation)
 
 {
-    "id":"aaaaaaaaaaa",
-    "human_id":"aaaaaaaaaa",
-    "status":pending_confirmation
-    "expiration": date
-    "user":{
-        "id":"aaa"
-    }
+    "id":"aaaaaaaaaa",
+    "status":pending_confirmation,
+    "expiration": date,
 }
 ````
 
 ```HTTP
 
-GET /reservation/{id}/users/{id}
+GET /reservation/{adventure_id}/{type}/users/{id}/
 {
-    "id":"aaaaaaaaaaa",
+    "adventure_id":"aaaaaaaaaaa",
     "status":[reserved,pending_confirmation,pending_payment]
     "expiration": [date|empty for reserved]
-    "user":{
-        "id":"aaa"
-    }
+    "user_id":"aaa"
 }
 ```
 ```HTTP
-PATCH /reservation/{id}/users/{id}/action/confirmed 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/status/confirmed 
 (only if the status is pending_confirmation)
 (moves to status pending_payment)
 
-PATCH /reservation/{id}/users/{id}/action/paid 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/status/paid 
 (only if the status is pending_payment)
 (moves to status reserved)
 
-PATCH /reservation/{id}/users/{id}/action/returned 
+PATCH /reservation/{adventure_id}/{type}/users/{id}/status/cancelled 
 (masks as deleted. "get" will not return it)
 (increases available capacity to 1)
 ```
@@ -91,7 +88,7 @@ PATCH /reservation/{id}/users/{id}/action/returned
 ## Tickets
 
 ```HTTP
-POST /tickets/reservation/{id}
+POST /tickets/{adventure_id}/{type}/{user_id}
 (calls payment processing partner to validate if the cc was charged using proc_id )
 {
     "proc_id"
