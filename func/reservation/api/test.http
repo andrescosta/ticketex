@@ -3,67 +3,68 @@ Host: localhost:8080
 Content-Type: application/json
 
 {
-    "adventure_id": "ifdfffff1i",
+    "adventure_id": "news",
     "status":1,
     "capacities":[
         {
             "type":"vip",
-            "availability":1000,
-            "max":1000
+            "availability":1000
         },
         {
             "type":"popular",
-            "availability":1000,
-            "max":10000
+            "availability":1000
         },
         {
             "type":"free",
-            "availability":100,
-            "max":100
+            "availability":100
         }
     ]
 }
 
 ###
 
-GET /reservations/ifdffff1i
+GET /reservations/news
 Host: localhost:8080
 Content-Type: application/json
 
 ###
 
-PATCH /reservations/ifdffff1i/capacities/vip
+PATCH /reservations/news/capacities/vip
 Host: localhost:8080
 Content-Type: application/json
 
 {
-    "max":3,
-    "availability":7
+    "availability":10002
 }
 
 ###
-POST /reservations/ifdffff1i/capacities/
+POST /reservations/news/capacities/
 Host: localhost:8080
 Content-Type: application/json
 
 {
-    "type":"aa1aaa",
-    "max":19,
+    "type":"lapop",
     "availability":30
 }
 
 ###
 
-POST /reservations/ifdffff1i/capacities/popular/users/123
+POST /reservations/news/capacities/vip/users/123456
 Host: localhost:8080
 Content-Type: application/json
 
 {
-    "quantity":2
+    "quantity":1
 } 
+###
+
+PATCH /reservations/news/capacities/vip/users/12345/status/reserved 
+Host: localhost:8080
+Content-Type: application/json
 
 ###
 
-PATCH /reservations/ifdffff1i/capacities/vip/users/123/status/reserved 
+PATCH /reservations/news/capacities/vip/users/123456/status/canceled 
 Host: localhost:8080
 Content-Type: application/json
+

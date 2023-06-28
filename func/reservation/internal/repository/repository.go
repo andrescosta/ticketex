@@ -1,109 +1,264 @@
 package repository
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"time"
 
+	"github.com/andrescosta/ticketex/func/reservation/internal/config"
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
+	"github.com/andrescosta/ticketex/func/reservation/internal/enums"
+	"github.com/andrescosta/ticketex/func/reservation/internal/rerrors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-type DataAccess interface {
-	Init(dsn string) error
-	GetReservation(reservation entity.Reservation) (entity.Reservation, []entity.ReservationCapacity, error)
-	CreateReservations(reservation entity.Reservation,
-		reservationCapacities []entity.ReservationCapacity) error
-	PatchReservation(reservation entity.Reservation) error
-	PatchReservationCapacity(reservationCapacity entity.ReservationCapacity) error
-	PostReservationCapacity(reservationCapacity entity.ReservationCapacity) error
-	PostReservationUser(reservationCapacity entity.ReservationUser) error
-	PatchReservationUser(reservationUser entity.ReservationUser) error
+type IReservation interface {
+	GetReservationMetadata(adventureId string) (entity.ReservationMetadata, error)
+	GetReservation(reservation entity.Reservation) (entity.Reservation, error)
+	GetReservationUnscoped(reservation entity.Reservation) (entity.Reservation, error)
+	AddReservationMetadata(reservation entity.ReservationMetadata) error
+	UpdateReservationMetadata(reservation entity.ReservationMetadata) error
+	ReserveIfAvailableCapacity(reservation entity.Reservation) error
+	ReserveAndRecycleIfAvailableCapacity(reservation entity.Reservation) error
+	UpdateReservationCapacity(reservationCapacity entity.ReservationCapacity) error
+	AddReservationCapacity(reservationCapacity entity.ReservationCapacity) error
+	CreateReservation(reservationCapacity entity.Reservation) error
+	UpdateReservation(reservationUser entity.Reservation) error
+	CancelReservation(reservationUser entity.Reservation) error
+	AddMoreAvailability(reservationCapacity entity.ReservationCapacity) error
 }
 
-type PostgressDataAccess struct {
+type Reservation struct {
 	DB *gorm.DB
 }
 
-func (d *PostgressDataAccess) Init(dsn string) error {
+func Init(config config.Config) (IReservation, error) {
+	dataAccess := &Reservation{}
+	loglevel := logger.Error
+	if config.DebugSql {
+		loglevel = logger.Info
+	}
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold:             time.Second, // Slow SQL threshold
-			LogLevel:                  logger.Info, // Log level
+			LogLevel:                  loglevel,    // Log level
 			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
 			ParameterizedQueries:      false,       // Don't include params in the SQL log
 			Colorful:                  false,       // Disable color
 		},
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: newLogger})
+	db, err := gorm.Open(postgres.Open(config.PostgressDsn), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		print(err)
-		return err
+		return nil, err
 	}
-	d.DB = db
-	println("creating schema ...")
-	err = db.AutoMigrate(&entity.Reservation{}, &entity.ReservationCapacity{}, &entity.ReservationUser{})
-	if err != nil {
-		print(err)
-		return err
-	}
-	println("end creating schema ...")
-	return nil
+	dataAccess.DB = db
+	return dataAccess, nil
 }
 
-func (d *PostgressDataAccess) GetReservation(reservation entity.Reservation) (entity.Reservation, []entity.ReservationCapacity, error) {
-	var reservationq = entity.Reservation{Adventure_id: reservation.Adventure_id}
-	var reservationr entity.Reservation
-	var reservationc []entity.ReservationCapacity
-	if err := d.DB.First(&reservationr, reservationq); err.Error != nil {
-		return reservationr, reservationc, err.Error
+func (d *Reservation) GetReservationMetadata(adventureId string) (entity.ReservationMetadata, error) {
+	metadata := entity.ReservationMetadata{Adventure_id: adventureId}
+	res := d.DB.Model(&entity.ReservationMetadata{}).Preload("Capacities").First(&metadata)
+	return metadata, res.Error
+}
+func (d *Reservation) GetReservation(reservation entity.Reservation) (entity.Reservation, error) {
+	return d.getReservation(reservation, false)
+}
+func (d *Reservation) GetReservationUnscoped(reservation entity.Reservation) (entity.Reservation, error) {
+	return d.getReservation(reservation, true)
+}
+func (d *Reservation) getReservation(reservation entity.Reservation, unscoped bool) (entity.Reservation, error) {
+	reserv := entity.Reservation{
+		Adventure_id: reservation.Adventure_id,
+		User_id:      reservation.User_id,
+		Type:         reservation.Type,
 	}
-
-	if err := d.DB.Find(&reservationc, reservationq); err.Error != nil {
-		return reservationr, reservationc, err.Error
+	var res *gorm.DB
+	if unscoped {
+		res = d.DB.Unscoped().First(&reserv)
+	} else {
+		res = d.DB.First(&reserv)
 	}
-	return reservationr, reservationc, nil
+	return reserv, res.Error
 }
 
-func (d *PostgressDataAccess) CreateReservations(reservation entity.Reservation, reservationCapacities []entity.ReservationCapacity) error {
+func (d *Reservation) AddReservationMetadata(reservation entity.ReservationMetadata) error {
 	return d.DB.Transaction(func(tx *gorm.DB) error {
 		if res := tx.Create(&reservation); res.Error != nil {
 			return res.Error
-		}
-		for _, reservationCapacity := range reservationCapacities {
-			if res := tx.Create(&reservationCapacity); res.Error != nil {
-				return res.Error
-			}
 		}
 		return nil
 	})
 }
 
-func (d *PostgressDataAccess) PatchReservation(reservation entity.Reservation) error {
+func (d *Reservation) UpdateReservationMetadata(reservation entity.ReservationMetadata) error {
 	result := d.DB.Updates(&reservation)
 	return result.Error
 }
+func (d *Reservation) ReserveAndRecycleIfAvailableCapacity(reservationUser entity.Reservation) error {
+	return d.reserveIfAvailableCapacity(reservationUser, true)
+}
+func (d *Reservation) ReserveIfAvailableCapacity(reservationUser entity.Reservation) error {
+	return d.reserveIfAvailableCapacity(reservationUser, false)
+}
+func (d *Reservation) reserveIfAvailableCapacity(reservationUser entity.Reservation, update bool) error {
+	tx := d.DB.Begin(&sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	var availability uint
+	result := tx.Raw(`SELECT availability FROM reservation_capacities 
+						WHERE availability>0 and availability>=? and adventure_id=? and 
+							  type=? and deleted_at is null FOR UPDATE;`,
+		reservationUser.Quantity, reservationUser.Adventure_id, reservationUser.Type).Scan(&availability)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return rerrors.ErrOutOfCapacity
+	}
+	availability = availability - reservationUser.Quantity
+	result = tx.Exec(`UPDATE reservation_capacities 
+						SET availability=? 
+						WHERE adventure_id=? and type=? and deleted_at is null`,
+		availability, reservationUser.Adventure_id, reservationUser.Type)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return rerrors.ErrUpdateCapacity
+	}
+	if update {
+		reservationUser.DeletedAt = gorm.DeletedAt{Valid: false}
+		result = tx.Unscoped().Updates(&reservationUser)
+	} else {
+		result = tx.Create(&reservationUser)
+	}
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	return tx.Commit().Error
+}
 
-func (d *PostgressDataAccess) PatchReservationCapacity(reservationCapacity entity.ReservationCapacity) error {
+func (d *Reservation) UpdateReservationCapacity(reservationCapacity entity.ReservationCapacity) error {
 	result := d.DB.Updates(&reservationCapacity)
 	return result.Error
 }
 
-func (d *PostgressDataAccess) PostReservationCapacity(reservationCapacity entity.ReservationCapacity) error {
+func (d *Reservation) AddReservationCapacity(reservationCapacity entity.ReservationCapacity) error {
 	result := d.DB.Create(&reservationCapacity)
 	return result.Error
 }
 
-func (d *PostgressDataAccess) PostReservationUser(reservationUser entity.ReservationUser) error {
+func (d *Reservation) CreateReservation(reservationUser entity.Reservation) error {
 	result := d.DB.Create(&reservationUser)
 	return result.Error
 }
 
-func (d *PostgressDataAccess) PatchReservationUser(reservationUser entity.ReservationUser) error {
+func (d *Reservation) UpdateReservation(reservationUser entity.Reservation) error {
 	result := d.DB.Updates(&reservationUser)
 	return result.Error
+}
+
+func (d *Reservation) CancelReservation(reservationUser entity.Reservation) error {
+	tx := d.DB.Begin(&sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	var availability uint
+	result := tx.Raw(`SELECT availability FROM reservation_capacities 
+						WHERE adventure_id=? and 
+							  type=? and deleted_at is null FOR UPDATE;`,
+		reservationUser.Adventure_id, reservationUser.Type).Scan(&availability)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return rerrors.ErrUpdateCapacity
+	}
+	availability = availability + reservationUser.Quantity
+	result = tx.Exec(`UPDATE reservation_capacities 
+						SET availability=? 
+						WHERE adventure_id=? and type=? and deleted_at is null`,
+		availability, reservationUser.Adventure_id, reservationUser.Type)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return rerrors.ErrUpdateCapacity
+	}
+	reservationUser.Status = enums.Canceled
+	result = tx.Updates(&reservationUser)
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return rerrors.ErrUpdateReservation
+	}
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	return tx.Commit().Error
+}
+
+func (d *Reservation) AddMoreAvailability(reservationCapacity entity.ReservationCapacity) error {
+	tx := d.DB.Begin(&sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	var availability int
+	result := tx.Raw(`SELECT availability FROM reservation_capacities 
+						WHERE adventure_id=? and 
+							  type=? and deleted_at is null FOR UPDATE;`,
+		reservationCapacity.Adventure_id, reservationCapacity.Type).Scan(&availability)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return rerrors.ErrIllegalAvailability
+	}
+	if reservationCapacity.Availability < uint(availability) {
+		tx.Rollback()
+		return rerrors.ErrIllegalAvailability
+	}
+	result = tx.Exec(`UPDATE reservation_capacities 
+						SET availability=? 
+						WHERE adventure_id=? and type=? and deleted_at is null;`,
+		reservationCapacity.Availability, reservationCapacity.Adventure_id, reservationCapacity.Type)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return rerrors.ErrUpdateCapacity
+	}
+	return tx.Commit().Error
 }

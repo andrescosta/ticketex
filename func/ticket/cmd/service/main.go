@@ -15,27 +15,25 @@ import (
 
 type Config struct {
 	PostgressDsn string `json:"postgress_dsn"`
+	Host         string `json:"host"`
 }
 
 func main() {
 	config := loadConfig()
-	dataAccess := &repository.PostgressDataAccess{}
-	dataAccess.Init(config.PostgressDsn)
+	dataAccess, err := repository.Init(config.PostgressDsn)
+	if err != nil {
+		log.Fatal(err)
+	}
 	reservation := resource.ReservationResource{DataAccess: dataAccess}
-
-	// Create the router
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Mount("/reservations", reservation.Routes())
-
-	// Define the routes
-
-	log.Fatal(http.ListenAndServe("localhost:8080", router))
-	println("Started")
+	log.Println("Server listening on", config.Host)
+	log.Fatal(http.ListenAndServe(config.Host, router))
 }
 
 func loadConfig() Config {
-	file, err := os.Open("../config.json")
+	file, err := os.Open("../../config.json")
 	if err != nil {
 		log.Fatal("Failed to open config file:", err)
 	}

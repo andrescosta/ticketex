@@ -2,46 +2,79 @@ package resource
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httplog"
+	"github.com/rs/zerolog"
 
+	"github.com/andrescosta/ticketex/func/reservation/internal/config"
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
+	"github.com/andrescosta/ticketex/func/reservation/internal/enums"
 	"github.com/andrescosta/ticketex/func/reservation/internal/model"
-	"github.com/andrescosta/ticketex/func/reservation/internal/repository"
+	"github.com/andrescosta/ticketex/func/reservation/internal/rerrors"
+	"github.com/andrescosta/ticketex/func/reservation/internal/service"
 )
 
-type ReservationResource struct {
-	DataAccess repository.DataAccess
+type IReservationResource interface {
+	Get(w http.ResponseWriter, r *http.Request)
+	Post(w http.ResponseWriter, r *http.Request)
+	PatchCapacity(w http.ResponseWriter, r *http.Request)
+	PostCapacity(w http.ResponseWriter, r *http.Request)
+	PostUser(w http.ResponseWriter, r *http.Request)
+	PatchUser(w http.ResponseWriter, r *http.Request)
+	Routes(logger zerolog.Logger) chi.Router
 }
 
-func (rr ReservationResource) Routes() chi.Router {
-	rtr := chi.NewRouter()
-	rtr.Post("/", rr.Post)
+type ReservationResource struct {
+	service service.IReservationSvc
+}
 
-	rtr.Route("/{adventure_id}", func(rrtr chi.Router) {
-		rrtr.Get("/", rr.Get)
-		rrtr.Route("/capacities", func(rrrtr chi.Router) {
-			rrrtr.Post("/", rr.PostCapacity)
-			rrrtr.Route("/{type}", func(rrrrtr chi.Router) {
-				rrrrtr.Patch("/", rr.PatchCapacity)
-				rrrrtr.Route("/users/{user_id}", func(rrrrrtr chi.Router) {
-					rrrrrtr.Post("/", rr.PostUser)
-					rrrrrtr.Patch("/status/{status}", rr.PatchUser)
+func Init(config config.Config) (IReservationResource, error) {
+
+	svc, err := service.Init(config)
+	if err != nil {
+		return nil, err
+	}
+	reservation := &ReservationResource{
+		service: svc,
+	}
+
+	return reservation, nil
+}
+
+func (rr ReservationResource) Routes(logger zerolog.Logger) chi.Router {
+	r := chi.NewRouter()
+	r.Use(httplog.RequestLogger(logger))
+	r.Post("/", rr.Post)
+
+	r.Route("/{adventure_id}", func(r2 chi.Router) {
+		r2.Get("/", rr.Get)
+		r2.Route("/capacities", func(r3 chi.Router) {
+			r3.Post("/", rr.PostCapacity)
+			r3.Route("/{type}", func(r4 chi.Router) {
+				r4.Patch("/", rr.PatchCapacity)
+				r4.Route("/users/{user_id}", func(r5 chi.Router) {
+					r5.Post("/", rr.PostUser)
+					r5.Patch("/status/{status}", rr.PatchUser)
 				})
 			})
 		})
 	})
 
-	return rtr
+	return r
 }
 
 func (rr ReservationResource) Get(w http.ResponseWriter, r *http.Request) {
-	res := entity.Reservation{Adventure_id: chi.URLParam(r, "adventure_id")}
+	res := entity.ReservationMetadata{Adventure_id: chi.URLParam(r, "adventure_id")}
 	if reservation, err := rr.getReservation(res, w); err != nil {
+		rr.logError("Failed to get reservation:", err, r)
 		http.Error(w, "Failed to get reservations", http.StatusInternalServerError)
 	} else {
 		if err = json.NewEncoder(w).Encode(reservation); err != nil {
+			rr.logError("Failed to get reservation:", err, r)
 			http.Error(w, "Failed to get reservations", http.StatusInternalServerError)
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -49,20 +82,19 @@ func (rr ReservationResource) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rr ReservationResource) getReservation(res entity.Reservation, w http.ResponseWriter) (model.Reservation, error) {
-	if reservation, reservationc, err := rr.DataAccess.GetReservation(res); err != nil {
+func (rr ReservationResource) getReservation(res entity.ReservationMetadata, w http.ResponseWriter) (model.Reservation, error) {
+	if reservation, err := rr.service.GetMetadata(res.Adventure_id); err != nil {
 		return model.Reservation{}, err
 	} else {
 		rreservation := model.Reservation{
 			Adventure_id: reservation.Adventure_id,
-			Status:       model.ReservationStatus(reservation.Status),
+			Status:       enums.ReservationStatus(reservation.Status),
 		}
 		var capacities []model.Capacity
-		for _, v := range reservationc {
+		for _, v := range reservation.Capacities {
 			capacity := model.Capacity{
 				Type:         v.Type,
 				Availability: v.Availability,
-				Max:          v.Max,
 			}
 			capacities = append(capacities, capacity)
 		}
@@ -74,23 +106,25 @@ func (rr ReservationResource) getReservation(res entity.Reservation, w http.Resp
 func (rr ReservationResource) Post(w http.ResponseWriter, r *http.Request) {
 	var mReservation model.Reservation
 	if err := json.NewDecoder(r.Body).Decode(&mReservation); err != nil {
+		rr.logError("Failed to decode request body:", err, r)
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 	var newReservationCapacities []entity.ReservationCapacity
-	var newReservation entity.Reservation
+	var newReservation entity.ReservationMetadata
 	newReservation.Adventure_id = mReservation.Adventure_id
 	newReservation.Status = uint(mReservation.Status)
 	for _, v := range mReservation.Capacity {
 		var newReservationCapacity entity.ReservationCapacity
 		newReservationCapacity.Adventure_id = mReservation.Adventure_id
 		newReservationCapacity.Availability = v.Availability
-		newReservationCapacity.Max = v.Max
 		newReservationCapacity.Type = v.Type
 		newReservationCapacities = append(newReservationCapacities, newReservationCapacity)
 	}
-	err := rr.DataAccess.CreateReservations(newReservation, newReservationCapacities)
+	newReservation.Capacities = newReservationCapacities
+	err := rr.service.NewReservationMetadata(newReservation)
 	if err != nil {
+		rr.logError("Failed to create reservation:", err, r)
 		http.Error(w, "Failed to create reservation", http.StatusInternalServerError)
 		return
 	}
@@ -106,13 +140,19 @@ func (rr ReservationResource) PatchCapacity(w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		rr.logError("Failed to decode body:", err, r)
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 
-	err := rr.DataAccess.PatchReservationCapacity(res)
+	err := rr.service.AddMoreAvailability(res)
 	if err != nil {
-		http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
+		rr.logError("Error updating capacity:", err, r)
+		if errors.Is(err, rerrors.ErrIllegalAvailability) {
+			http.Error(w, "Illegal availability.", http.StatusBadRequest)
+		} else {
+			http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -125,12 +165,14 @@ func (rr ReservationResource) PostCapacity(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		rr.logError("Failed to decode body:", err, r)
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 
-	err := rr.DataAccess.PostReservationCapacity(res)
+	err := rr.service.NewReservationTypeMetadata(res)
 	if err != nil {
+		rr.logError("Failed to create metadata:", err, r)
 		http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
 		return
 	}
@@ -139,19 +181,21 @@ func (rr ReservationResource) PostCapacity(w http.ResponseWriter, r *http.Reques
 }
 
 func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
-	res := entity.ReservationUser{
+	res := entity.Reservation{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		Type:         chi.URLParam(r, "type"),
 		User_id:      chi.URLParam(r, "user_id"),
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		rr.logError("Failed to decode reservation body:", err, r)
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
-	res.Status = uint(model.Pending)
-	err := rr.DataAccess.PostReservationUser(res)
+	res.Status = enums.Pending
+	err := rr.service.Reserve(res)
 	if err != nil {
+		rr.logError("Failed to create reservation:", err, r)
 		http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
 		return
 	}
@@ -162,18 +206,43 @@ func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rr ReservationResource) PatchUser(w http.ResponseWriter, r *http.Request) {
-	res := entity.ReservationUser{
+	res := entity.Reservation{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		Type:         chi.URLParam(r, "type"),
 		User_id:      chi.URLParam(r, "user_id"),
-		Status:       uint(model.ToReservationUserStatus(chi.URLParam(r, "status"))),
 	}
 
-	err := rr.DataAccess.PatchReservationUser(res)
-	if err != nil {
-		http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
+	status := enums.ToReservationUserStatus(chi.URLParam(r, "status"))
+
+	var err error
+
+	switch status {
+	case enums.Pending:
+		rr.logError("Failed to update reservation", nil, r)
+		http.Error(w, "Failed to update reservation", http.StatusBadRequest)
 		return
+	case enums.Reserved:
+		err = rr.service.Paid(res)
+		if err != nil {
+			rr.logError("Failed to update reservation:", err, r)
+			http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
+			return
+		}
+	case enums.Canceled:
+		err = rr.service.Cancelled(res)
+		if err != nil {
+			rr.logError("Failed to update reservation:", err, r)
+			http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
+			return
+		}
 	}
-
 	w.WriteHeader(http.StatusOK)
+}
+
+func (rr ReservationResource) logError(msg string, err error, r *http.Request) {
+	oplog := httplog.LogEntry(r.Context())
+	if err != nil {
+		msg = fmt.Sprint(msg, err)
+	}
+	oplog.Error().Msg(msg)
 }
