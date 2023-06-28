@@ -88,7 +88,7 @@ PATCH /reservation/{adventure_id}/{type}/users/{id}/status/cancelled
 ## Tickets
 
 ```HTTP
-POST /tickets/reservation/{id}
+POST /tickets/{adventure_id}/{type}/{user_id}
 (calls payment processing partner to validate if the cc was charged using proc_id )
 {
     "proc_id"
