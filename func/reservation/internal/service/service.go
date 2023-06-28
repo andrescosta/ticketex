@@ -16,6 +16,7 @@ type IReservationSvc interface {
 	GetMetadata(adventureId string) (entity.ReservationMetadata, error)
 	AddMoreAvailability(reservationCapacity entity.ReservationCapacity) error
 	NewReservationTypeMetadata(reservationCapacity entity.ReservationCapacity) error
+	Get(reservation entity.Reservation) (entity.Reservation, error)
 	Reserve(reservation entity.Reservation) error
 	Paid(reservation entity.Reservation) error
 	Cancelled(reservation entity.Reservation) error
@@ -33,6 +34,10 @@ func Init(config config.Config) (IReservationSvc, error) {
 			repo: repo,
 		}, nil
 	}
+}
+
+func (r *ReservationSvc) Get(reservation entity.Reservation) (entity.Reservation, error) {
+	return r.repo.GetReservation(reservation)
 }
 
 func (r *ReservationSvc) NewReservationMetadata(reservation entity.ReservationMetadata) error {

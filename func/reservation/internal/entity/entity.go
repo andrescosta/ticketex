@@ -19,7 +19,7 @@ type ReservationMetadata struct {
 type ReservationCapacity struct {
 	Adventure_id string `gorm:"primaryKey"`
 	Type         string `gorm:"primaryKey"`
-	Status       enums.ReservationStatus
+	Status       enums.ReservationMetadataStatus
 	Availability uint
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
@@ -31,7 +31,7 @@ type Reservation struct {
 	User_id      string `gorm:"primaryKey"`
 	Type         string `gorm:"primaryKey"`
 	Quantity     uint
-	Status       enums.ReservationUserStatus
+	Status       enums.ReservationStatus
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    gorm.DeletedAt `gorm:"index"`

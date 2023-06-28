@@ -3,7 +3,7 @@
 ## Reservations
 
 ```HTTP
-POST /reservation
+POST /reservation/metadata
 {
     "adventure_id":"aaaaa",
     "status":"closed"
@@ -15,7 +15,7 @@ POST /reservation
     ]
 }
 
-GET /reservation/{adventure_id}
+GET /reservation/metadata/{adventure_id}
 {
     "adventure_id":"aaaaa",
     "status":open
@@ -30,7 +30,7 @@ GET /reservation/{adventure_id}
 ```
 
 ```HTTP
-PATCH /reservation/{adventure_id}/capacity/{type}
+PATCH /reservation/metadata/{adventure_id}/capacity/{type}
 {
     "max":1000 
     (max must be bigger than current max. if not, error)
@@ -38,7 +38,7 @@ PATCH /reservation/{adventure_id}/capacity/{type}
 ```
 
 ```HTTP
-POST /reservation/{adventure_id}/capacity
+POST /reservation/metadata/{adventure_id}/capacity
 {
     "type":aaaaa,
     "max":1000 

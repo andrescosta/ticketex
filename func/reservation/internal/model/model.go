@@ -2,10 +2,10 @@ package model
 
 import "github.com/andrescosta/ticketex/func/reservation/internal/enums"
 
-type Reservation struct {
-	Adventure_id string                  `json:"adventure_id"`
-	Status       enums.ReservationStatus `json:"status"`
-	Capacity     []Capacity              `json:"capacities"`
+type ReservationMetadata struct {
+	Adventure_id string                          `json:"adventure_id"`
+	Status       enums.ReservationMetadataStatus `json:"status"`
+	Capacity     []Capacity                      `json:"capacities"`
 }
 
 type Capacity struct {
@@ -13,10 +13,10 @@ type Capacity struct {
 	Availability uint   `json:"availability"`
 }
 
-type ReservationUser struct {
-	Adventure_id string                      `json:"adventure_id"`
-	User_id      string                      `json:"user_id"`
-	Type         string                      `json:"type"`
-	Quantity     string                      `json:"quantity"`
-	Status       enums.ReservationUserStatus `json:"status"`
+type Reservation struct {
+	Adventure_id string                  `json:"adventure_id"`
+	User_id      string                  `json:"user_id"`
+	Type         string                  `json:"type"`
+	Quantity     uint                    `json:"quantity"`
+	Status       enums.ReservationStatus `json:"status"`
 }

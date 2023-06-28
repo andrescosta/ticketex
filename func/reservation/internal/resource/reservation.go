@@ -48,18 +48,20 @@ func Init(config config.Config) (IReservationResource, error) {
 func (rr ReservationResource) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
-	r.Post("/", rr.Post)
+	r.Post("/metadata", rr.Post)
 
-	r.Route("/{adventure_id}", func(r2 chi.Router) {
+	r.Route("/{adventure_id}/capacities/{type}/users/{user_id}", func(r1 chi.Router) {
+		r1.Post("/", rr.PostUser)
+		r1.Get("/", rr.GetUser)
+		r1.Patch("/status/{status}", rr.PatchUser)
+	})
+
+	r.Route("/metadata/{adventure_id}", func(r2 chi.Router) {
 		r2.Get("/", rr.Get)
 		r2.Route("/capacities", func(r3 chi.Router) {
 			r3.Post("/", rr.PostCapacity)
 			r3.Route("/{type}", func(r4 chi.Router) {
 				r4.Patch("/", rr.PatchCapacity)
-				r4.Route("/users/{user_id}", func(r5 chi.Router) {
-					r5.Post("/", rr.PostUser)
-					r5.Patch("/status/{status}", rr.PatchUser)
-				})
 			})
 		})
 	})
@@ -82,13 +84,13 @@ func (rr ReservationResource) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rr ReservationResource) getReservation(res entity.ReservationMetadata, w http.ResponseWriter) (model.Reservation, error) {
+func (rr ReservationResource) getReservation(res entity.ReservationMetadata, w http.ResponseWriter) (model.ReservationMetadata, error) {
 	if reservation, err := rr.service.GetMetadata(res.Adventure_id); err != nil {
-		return model.Reservation{}, err
+		return model.ReservationMetadata{}, err
 	} else {
-		rreservation := model.Reservation{
+		rreservation := model.ReservationMetadata{
 			Adventure_id: reservation.Adventure_id,
-			Status:       enums.ReservationStatus(reservation.Status),
+			Status:       enums.ReservationMetadataStatus(reservation.Status),
 		}
 		var capacities []model.Capacity
 		for _, v := range reservation.Capacities {
@@ -104,7 +106,7 @@ func (rr ReservationResource) getReservation(res entity.ReservationMetadata, w h
 }
 
 func (rr ReservationResource) Post(w http.ResponseWriter, r *http.Request) {
-	var mReservation model.Reservation
+	var mReservation model.ReservationMetadata
 	if err := json.NewDecoder(r.Body).Decode(&mReservation); err != nil {
 		rr.logError("Failed to decode request body:", err, r)
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
@@ -178,6 +180,32 @@ func (rr ReservationResource) PostCapacity(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+func (rr ReservationResource) GetUser(w http.ResponseWriter, r *http.Request) {
+	rese, err := rr.service.Get(
+		entity.Reservation{
+			Adventure_id: chi.URLParam(r, "adventure_id"),
+			Type:         chi.URLParam(r, "type"),
+			User_id:      chi.URLParam(r, "user_id"),
+		})
+
+	if err != nil {
+		rr.logError("Failed to get reservation:", err, r)
+		http.Error(w, "Failed to get reservation", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
+	_ = json.NewEncoder(w).Encode(
+		&model.Reservation{
+			Adventure_id: rese.Adventure_id,
+			Type:         rese.Type,
+			Quantity:     rese.Quantity,
+			Status:       rese.Status,
+			User_id:      rese.User_id,
+		})
 }
 
 func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {

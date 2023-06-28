@@ -1,9 +1,9 @@
-POST /reservations
+POST /reservations/metadata
 Host: localhost:8080
 Content-Type: application/json
 
 {
-    "adventure_id": "news",
+    "adventure_id": "newsar",
     "status":1,
     "capacities":[
         {
@@ -23,13 +23,13 @@ Content-Type: application/json
 
 ###
 
-GET /reservations/news
+GET /reservations/metadata/newsar
 Host: localhost:8080
 Content-Type: application/json
 
 ###
 
-PATCH /reservations/news/capacities/vip
+PATCH /reservations/metadata/newsar/capacities/vip
 Host: localhost:8080
 Content-Type: application/json
 
@@ -38,7 +38,7 @@ Content-Type: application/json
 }
 
 ###
-POST /reservations/news/capacities/
+POST /reservations/metadata/newsar/capacities/
 Host: localhost:8080
 Content-Type: application/json
 
@@ -49,7 +49,7 @@ Content-Type: application/json
 
 ###
 
-POST /reservations/news/capacities/vip/users/123456
+POST /reservations/newsar/capacities/vip/users/12345678
 Host: localhost:8080
 Content-Type: application/json
 
@@ -57,14 +57,19 @@ Content-Type: application/json
     "quantity":1
 } 
 ###
-
-PATCH /reservations/news/capacities/vip/users/12345/status/reserved 
+GET /reservations/newsar/capacities/vip/users/12345678
 Host: localhost:8080
 Content-Type: application/json
 
 ###
 
-PATCH /reservations/news/capacities/vip/users/123456/status/canceled 
+PATCH /reservations/newsar/capacities/vip/users/1234567/status/reserved 
+Host: localhost:8080
+Content-Type: application/json
+
+###
+
+PATCH /reservations/newsar/capacities/vip/users/123456/status/canceled 
 Host: localhost:8080
 Content-Type: application/json
 

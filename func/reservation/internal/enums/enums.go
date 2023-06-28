@@ -2,21 +2,31 @@ package enums
 
 import "strings"
 
+type ReservationMetadataStatus uint
 type ReservationStatus uint
-type ReservationUserStatus uint
 
 const (
-	Closed ReservationStatus = iota
+	Closed ReservationMetadataStatus = iota
 	Opened
 )
 
 const (
-	Pending ReservationUserStatus = iota
+	Pending ReservationStatus = iota
 	Reserved
 	Canceled
 )
 
-func ToReservationUserStatus(s string) ReservationUserStatus {
+func ToReservationMetadataStatus(s string) ReservationMetadataStatus {
+	switch strings.ToLower(s) {
+	case "closed":
+		return Closed
+	case "opened":
+		return Opened
+	}
+	return Opened
+}
+
+func ToReservationUserStatus(s string) ReservationStatus {
 	switch strings.ToLower(s) {
 	case "pending":
 		return Pending
