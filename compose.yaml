@@ -56,7 +56,7 @@ services:
       - backend
     environment:
       postgress_dsn: host=postgres-db user=postgres password=mysecretpassword dbname=resv sslmode=disable
-      host: localhost:8080
+      host: :8080
     ports:
       - "8080:8080"
     restart: always
@@ -69,7 +69,7 @@ services:
     networks:
       - backend
     environment:
-      host: localhost:8585
+      host: :8585
     ports:
       - "8585:8585"
     restart: always
@@ -80,7 +80,7 @@ services:
       - backend
     environment:
       postgress_dsn: host=postgres-db user=postgres password=mysecretpassword dbname=ticket sslmode=disable
-      host: localhost:8082
+      host: :8082
     ports:
       - "8082:8082"
     restart: always

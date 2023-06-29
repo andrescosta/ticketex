@@ -24,7 +24,7 @@ COPY --from=builder /app/app .
 # Expose the port that the application listens on
 EXPOSE 8585
 ENV postgress_dsn="host=host.docker.internal user=postgres password=mysecretpassword dbname=ticket sslmode=disable"
-ENV host="localhost:8585"
+ENV host=":8585"
 
 # Run the Go application
 CMD ["./app"]
