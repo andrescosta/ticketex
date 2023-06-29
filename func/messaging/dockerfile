@@ -10,7 +10,7 @@ COPY . .
 RUN go mod tidy
 
 # Build the Go application
-RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/service && go build -o migrate ./cmd/tools
+RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd
 
 # Use a minimal Alpine image as the base image for the final container
 FROM alpine:latest
@@ -20,12 +20,11 @@ WORKDIR /app
 
 # Copy the built binary from the previous stage
 COPY --from=builder /app/app .
-COPY --from=builder /app/migrate .
 
 # Expose the port that the application listens on
-EXPOSE 8282
+EXPOSE 8585
 ENV postgress_dsn="host=host.docker.internal user=postgres password=mysecretpassword dbname=ticket sslmode=disable"
-ENV host="localhost:8282"
+ENV host="localhost:8585"
 
 # Run the Go application
-CMD ["sh","-c", "./migrate && ./app"]
+CMD ["./app"]

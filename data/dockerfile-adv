@@ -1,0 +1,13 @@
+FROM python:3.9
+WORKDIR /code
+COPY ./requirements.txt /code/requirements.txt
+COPY ./common/tiklib /code/common/tiklib
+COPY ./common/setup.py /code/common
+WORKDIR /code/common
+RUN python setup.py install
+WORKDIR /code
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+COPY ./adventures/app /code/app
+COPY ./adventures/.env /code/
+COPY ./adventures/logging.yaml /code/
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

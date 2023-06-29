@@ -1,0 +1,135 @@
+version: "3.8"
+
+networks:
+  backend:
+    name: app
+    driver: bridge
+volumes:
+  postgres_data:
+    driver: local
+  mongo_data:
+    driver: local
+services:
+  adventures:
+    image: ticketex/adventures:latest
+    build:
+      context: ./data
+      dockerfile: dockerfile-adv
+    networks:
+      - backend
+    environment:
+      DATABASE_URL: mongodb://root:example@mongo:27017
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+  partners:
+    image: ticketex/partners:latest
+    build:
+      context: ./data
+      dockerfile: dockerfile-partners
+    networks:
+      - backend
+    environment:
+      DATABASE_URL: mongodb://root:example@mongo:27017
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mongo
+  users:
+    image: ticketex/users:latest
+    build:
+      context: ./data
+      dockerfile: dockerfile-users
+    networks:
+      - backend
+    environment:
+      DATABASE_URL: mongodb://root:example@mongo:27017
+    ports:
+      - "8002:8002"
+    depends_on:
+      - mongo
+  reservation:
+    image: ticketex/reservation:latest
+    build: ./func/reservation
+    networks:
+      - backend
+    environment:
+      postgress_dsn: host=postgres-db user=postgres password=mysecretpassword dbname=resv sslmode=disable
+      host: localhost:8080
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+  messaging:
+    image: ticketex/messaging:latest
+    build: ./func/messaging
+    networks:
+      - backend
+    environment:
+      host: localhost:8585
+    ports:
+      - "8585:8585"
+    restart: always
+  ticket:
+    image: ticketex/ticket:latest
+    build: ./func/ticket
+    networks:
+      - backend
+    environment:
+      postgress_dsn: host=postgres-db user=postgres password=mysecretpassword dbname=ticket sslmode=disable
+      host: localhost:8082
+    ports:
+      - "8082:8082"
+    restart: always
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+  postgres-db:
+    image: postgres:15
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./provisioning/postgres-db:/docker-entrypoint-initdb.d/
+    networks:
+      - backend
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 10s
+      retries: 2
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - backend
+    volumes:
+      - mongo_data:/var/lib/mongodb/data
+      - ./provisioning/mongo-db:/docker-entrypoint-initdb.d/
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: ticketex
+  mongo-express:
+    image: mongo-express
+    restart: always
+    networks:
+      - backend
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+    depends_on:
+      - mongo
