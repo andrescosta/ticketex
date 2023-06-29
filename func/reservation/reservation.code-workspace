@@ -36,7 +36,8 @@
 				"type": "go",
 				"request": "launch",
 				"mode": "auto",
-				"program": "${workspaceFolder}/cmd/service"
+				"program": "${workspaceFolder}/cmd/service",
+				"env": {"postgress_dsn":"test","Host":"test2","debug_sql":"true"}
 			}
 		]
 	}
