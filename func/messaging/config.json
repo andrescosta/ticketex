@@ -1,0 +1,6 @@
+{
+    "postgress_dsn":"",
+    "host":"localhost:8080",
+    "debug_sql":true
+
+}

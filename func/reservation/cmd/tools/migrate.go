@@ -12,23 +12,23 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-type Config struct {
-	PostgressDsn string `json:"postgress_dsn"`
-	Host         string `json:"host"`
-}
-
 func main() {
 	log.Println("Starting migration")
 	config := config.Load("../../config.json")
 
+	loglevel := logger.Error
+	if config.DebugSql {
+		loglevel = logger.Info
+	}
+
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second,  // Slow SQL threshold
-			LogLevel:                  logger.Error, // Log level
-			IgnoreRecordNotFoundError: true,         // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      false,        // Don't include params in the SQL log
-			Colorful:                  false,        // Disable color
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  loglevel,    // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      false,       // Don't include params in the SQL log
+			Colorful:                  false,       // Disable color
 		},
 	)
 
