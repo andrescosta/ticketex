@@ -1,0 +1,4 @@
+GET /users
+Host: localhost:3000
+
+###

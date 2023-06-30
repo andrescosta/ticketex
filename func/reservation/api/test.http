@@ -3,7 +3,7 @@ Host: localhost:8080
 Content-Type: application/json
 
 {
-    "adventure_id": "newsar",
+    "adventure_id": "new1sar",
     "status":1,
     "capacities":[
         {
@@ -23,7 +23,7 @@ Content-Type: application/json
 
 ###
 
-GET /reservations/metadata/newsar
+GET /reservations/metadata/new1sar
 Host: localhost:8080
 Content-Type: application/json
 
