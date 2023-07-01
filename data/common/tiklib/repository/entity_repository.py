@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from pymongo.collection import Collection
 import copy
 from bson import ObjectId
@@ -23,8 +23,22 @@ class EntityRepository:
         nentity.id = str(result.inserted_id); 
         logger.debug(f"The {self.entity_name()} with id {nentity.id} was saved.")
         return nentity
-    
-    async def get(self, id:str):
+
+    async def get(self, id:str|None):
+        if id is None:
+            return await self.__getAll()
+        else:
+            return await self.__getOne(id)
+
+    async def __getAll(self):
+        entities = []
+        cursor = self.collection().find({})
+        async for entity_dic in cursor:
+            entity_dic["id"] = str(entity_dic.pop("_id"))
+            entities.append(self.entity_type(**entity_dic))
+        return entities  
+
+    async def __getOne(self, id:str):
         entity_dic = await self.collection().find_one({"_id": ObjectId(id)})
         if entity_dic:
             entity_dic["id"] = str(entity_dic.pop("_id"))
@@ -32,6 +46,8 @@ class EntityRepository:
         else:
             logger.debug(f"The {self.entity_name()} with id {id} was not found.")
             raise EntityNotFoundError(id, self.entity_type)
+
+        
 
     async def update(self, id:str, entity:Entity)->Entity:
         entity_dict = self.for_saving(entity)

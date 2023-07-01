@@ -22,7 +22,7 @@ func main() {
 			JSON: true,
 		})
 
-		router.Mount("/messaging", msg.Routes(logger))
+		router.Mount("/v1/messaging", msg.Routes(logger))
 		log.Println("Server listening at", config.Host)
 		log.Fatal(http.ListenAndServe(config.Host, router))
 	} else {

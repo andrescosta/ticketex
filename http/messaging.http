@@ -1,0 +1,11 @@
+POST /v1/messaging/aaa
+Host: localhost:8585
+Content-Type: application/json
+
+{
+    "type":"aaaaaaaaa",
+    "channel":"4",
+    "data":{
+        "a":"a"
+    }
+}

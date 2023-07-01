@@ -17,6 +17,10 @@ async def get(partner_id: str):
     res = await repository.partner.get(partner_id)
     return res
 
+@router.get("")
+async def get():
+    res = await repository.partner.get(None)
+    return res
 
 @router.put("/{partner_id}")
 async def put(partner_id: str, partner: Partner):

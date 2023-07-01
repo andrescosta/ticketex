@@ -12,6 +12,10 @@ async def post(*, user: User):
     newuser = await repository.user.save(user)
     return newuser
 
+@router.get("")
+async def get():
+    res = await repository.user.get(None)
+    return res
 
 @router.get("/{user_id}")
 async def get(user_id: str):

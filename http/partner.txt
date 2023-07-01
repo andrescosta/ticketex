@@ -1,0 +1,37 @@
+curl -X POST -H "Content-Type: application/json" -d '{"email":"1@example.com","fullname":"John Doe","phone":"1234567890","ext_id":"abc123xyz","addresses":[ { "zipcode":"string","street1":"string","street2":"string","country":"string","state":"string"}]}' http://localhost:8000/v1/partners/
+
+curl -X DELETE http://localhost:8000/v1/partners/64724380e7c90b56ccf5b88a
+curl -X GET http://localhost:8000/v1/partners/6470d7fe55a5d96e095ecae3
+
+curl -X POST -H "Content-Type: application/json" -d '{
+  "id":"string",
+  "email": "string",
+  "name": "string",
+  "phone": "string",
+  "ext_id": "string",
+  "addresses": [
+    {
+      "zipcode": "string",
+      "street1": "string",
+      "street2": "string",
+      "country": "string",
+      "state": "string"
+    }
+  ]
+}' http://localhost:8000/v1/partners
+
+curl -X PUT -H "Content-Type: application/json" -d '{
+  "email": "string",
+  "name": "string",
+  "phone": "string",
+  "ext_id": "string",
+  "addresses": [
+    {
+      "zipcode": "string",
+      "street1": "string",
+      "street2": "string",
+      "country": "string",
+      "state": "string"
+    }
+  ]
+}' http://localhost:8000/v1/partners/64776fc3f0fa560439d50fed

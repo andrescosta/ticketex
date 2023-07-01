@@ -1,0 +1,93 @@
+## Users
+
+POST http://localhost:8002/v1/users  
+Content-Type: application/json 
+
+{
+  "id": "string",
+  "email": "string",
+  "fullname": "string",
+  "phone": "string",
+  "ext_id": "string",
+  "preferences": [
+    {
+      "channels": [
+        {
+          "value": "string",
+          "channel_type": "email",
+          "message_type": "tickets"
+        }
+      ]
+    }
+  ],
+  "address": {
+    "zipcode": "string",
+    "street1": "string",
+    "street2": "string",
+    "country": "string",
+    "state": "string"
+  }
+} 
+###
+
+POST http://localhost:8000/v1/adventures 
+content-type:application/json
+
+{
+  "name": "string",
+  "description": "string",
+  "tickets": [
+    {
+      "capacity": 0,
+      "type": "string"
+    }
+  ],
+  "venue": {
+    "name": "string",
+    "address": {
+      "zipcode": "string",
+      "street1": "string",
+      "street2": "string",
+      "country": "string",
+      "state": "string"
+    },
+    "phone": "string"
+  }
+}
+###
+POST http://localhost:8001/v1/partners 
+Content-Type: application/json
+
+{
+  "id":"string",
+  "email": "string",
+  "name": "string",
+  "phone": "string",
+  "ext_id": "string",
+  "addresses": [
+    {
+      "zipcode": "string",
+      "street1": "string",
+      "street2": "string",
+      "country": "string",
+      "state": "string"
+    }
+  ]
+}
+
+
+###
+GET http://localhost:8000/v1/users/64a06491a71cee64b2918adf
+Content-Type: application/json 
+
+###
+GET http://localhost:8002/v1/users
+Content-Type: application/json 
+
+###
+GET http://localhost:8000/v1/adventures
+Content-Type: application/json 
+
+###
+GET http://localhost:8001/v1/partners
+Content-Type: application/json 

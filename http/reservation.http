@@ -1,21 +1,35 @@
-POST v1/tickets/tes1/ada/11
-Host: localhost:8082
+POST /v1/reservations/metadata
+Host: localhost:8080
 Content-Type: application/json
 
 {
-    "Credit_Card_TX_ID":"aaaaaaaaa",
-    "Quantity":4
+    "adventure_id": "new1sar",
+    "status":1,
+    "capacities":[
+        {
+            "type":"vip",
+            "availability":1000
+        },
+        {
+            "type":"popular",
+            "availability":1000
+        },
+        {
+            "type":"free",
+            "availability":100
+        }
+    ]
 }
 
 ###
 
-GET v1/tickets/tes1/ada/11
-Host: localhost:8082
+GET /v1/reservations/metadata/new1sar
+Host: localhost:8080
 Content-Type: application/json
 
 ###
 
-PATCH v1/reservations/metadata/newsar/capacities/vip
+PATCH /reservations/metadata/newsar/capacities/vip
 Host: localhost:8080
 Content-Type: application/json
 

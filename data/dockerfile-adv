@@ -1,9 +1,11 @@
-FROM python:3.9
+FROM python:3.11
 WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 COPY ./common/tiklib /code/common/tiklib
 COPY ./common/setup.py /code/common
+COPY ./common/requirements.txt /code/common
 WORKDIR /code/common
+RUN pip install --no-cache-dir --upgrade -r /code/common/requirements.txt
 RUN python setup.py install
 WORKDIR /code
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt

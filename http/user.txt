@@ -1,0 +1,55 @@
+curl -X POST -H "Content-Type: application/json" -d '{"id":"647369ebe2c49078c81d3b9b","email":"1@example.com","fullname":"John Doe","phone":"1234567890","ext_id":"abc123xyz","preferences":[{"name":"rock","notif":true},{"name":"pop","notif":false}]}' http://localhost:8000/v1/users/
+curl -X DELETE http://localhost:8000/v1/users/64724380e7c90b56ccf5b88a
+curl -X GET http://localhost:8000/v1/users/6470d7fe55a5d96e095ecae3
+curl -X PUT -H "Content-Type: application/json" -d '{"jwt_sub":"abc123xyz","email":"andres@e1xample.com","fullname":"1John Doe","phone":"1234567890"}' http://localhost:8000/v1/users/64724b31415a9836285f1399
+curl -X PUT -H "Content-Type: application/json" -d '{"email":"2@example.com","fullname":"John Doe","phone":"1234567890","ext_id":"abc123xyz","preferences":[{"name":"rock","notif":true},{"name":"pop","notif":false}]}' http://localhost:8000/v1/users/64738d28b7047433c7af1678
+
+curl -X POST -H "Content-Type: application/json" -d '
+{"email":"1@example.com","fullname":"John Doe","phone":"1234567890","ext_id":"abc123xyz","preferences": [{"name": "rock", "notif": True},{"name": "pop", "notif": False}]}' http://localhost:8000/v1/users/
+
+curl -X POST -H "Content-Type: application/json" -d '{
+  "id": "string",
+  "email": "string",
+  "fullname": "string",
+  "phone": "string",
+  "ext_id": "string",
+  "preferences": [
+    {
+      "channels": [
+        {
+          "value": "string",
+          "channel_type": "email",
+          "message_type": "tickets"
+        }
+      ]
+    }
+  ],
+  "address": {
+    "zipcode": "string",
+    "street1": "string",
+    "street2": "string",
+    "country": "string",
+    "state": "string"
+  }
+}' http://localhost:8000/v1/users
+
+
+curl -X PUT -H "Content-Type: application/json" -d '{
+  "email": "aa@aa.com",
+  "fullname": "string",
+  "phone": "string",
+  "ext_id": "string",
+  "preferences": [
+    {
+      "name": "string",
+      "notif": true
+    }
+  ],
+  "address": {
+    "zipcode": "string",
+    "street1": "string",
+    "street2": "string",
+    "country": "string",
+    "state": "string"
+  }
+}' http://localhost:8000/v1/users/64776ecef0b2ab10466ad72c

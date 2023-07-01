@@ -15,12 +15,15 @@ async def get(adventure_id: str):
     res = await repository.adventure.get(adventure_id)
     return res
 
+@router.get("")
+async def get():
+    res = await repository.adventure.get(None)
+    return res
 
 @router.put("/{adventure_id}")
 async def put(adventure_id: str, adventure: Adventure):
     res = await repository.adventure.update(adventure_id, adventure)
     return res
-
 
 @router.delete("/{adventure_id}")
 async def delete(adventure_id: str):
