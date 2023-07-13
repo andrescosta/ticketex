@@ -1,16 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
-import { DataService } from './data/data.service';
-import { FuncService } from './func/func.service';
+import { Controller, Get, Headers } from '@nestjs/common';
+import { UserDataClient } from './data/user.data';
 
 @Controller('users')
 export class AppController {
-  constructor(
-    private readonly dataService: DataService,
-    private readonly funcService: FuncService,
-  ) {}
+  constructor(private readonly userDataClient: UserDataClient) {}
 
   @Get()
-  getHello(): string {
-    return this.dataService.getHello() + this.funcService.getHello();
+  async get(@Headers('USER-ID') id?: string): Promise<string> {
+    const user = await this.userDataClient.getById(id);
+    /*    let result = '';
+    users.forEach((element) => {
+      result += element.email;
+    });
+    return result;
+  }
+*/
+    return user.email + 'aaa';
   }
 }

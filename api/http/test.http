@@ -1,4 +1,7 @@
 GET /users
 Host: localhost:3000
+USER-ID: 64a08bebc96929cab8467f5d
 
 ###
+
+GET http://localhost:8002/v1/users

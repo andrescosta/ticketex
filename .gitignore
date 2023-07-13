@@ -3,6 +3,8 @@
 *.bak
 backup/
 
+*.*~
+api2/
 *.exe
 *.exe~
 *.dll

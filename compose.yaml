@@ -87,6 +87,21 @@ services:
     depends_on:
       postgres-db:
         condition: service_healthy
+  api:
+    image: api/api:latest
+    build: ./api
+    networks:
+      - backend
+    ports:
+      - "3000:3000"
+    restart: always
+    depends_on:
+      - ticket
+      - messaging
+      - reservation
+      - users
+      - partners
+      - adventures
   postgres-db:
     image: postgres:15
     restart: always

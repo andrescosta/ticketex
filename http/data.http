@@ -5,7 +5,7 @@ Content-Type: application/json
 
 {
   "id": "string",
-  "email": "string",
+  "email": "string2",
   "fullname": "string",
   "phone": "string",
   "ext_id": "string",
@@ -91,3 +91,4 @@ Content-Type: application/json
 ###
 GET http://localhost:8001/v1/partners
 Content-Type: application/json 
+

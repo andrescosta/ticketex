@@ -1,8 +1,8 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common/decorators';
-import { UsersService } from './users.service';
-import { PartnersService } from './partners.service';
-import { AdventuresService } from './adventures.service';
+import { UserDataClient } from './user.data';
+import { PartnerDataClient } from './partner.data';
+import { AdventureDataClient } from './adventure.data';
 
 @Module({
   imports: [
@@ -13,6 +13,7 @@ import { AdventuresService } from './adventures.service';
       }),
     }),
   ],
-  providers: [UsersService, PartnersService, AdventuresService],
+  providers: [UserDataClient, PartnerDataClient, AdventureDataClient],
+  exports: [UserDataClient, PartnerDataClient, AdventureDataClient],
 })
 export class DataModule {}

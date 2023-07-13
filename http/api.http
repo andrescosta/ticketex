@@ -1,0 +1,2 @@
+GET http://localhost:3000/users
+USER-ID: 64a0a7bda91573b99fe9d862

@@ -1,3 +1,5 @@
+import { Address } from './address';
+
 export interface User {
   id: string;
   email: string;
@@ -12,12 +14,4 @@ export interface Channel {
   value: string;
   channelType: string;
   messageType: string;
-}
-
-export interface Address {
-  zipcode: string;
-  street1: string;
-  street2: string;
-  country: string;
-  state: string;
 }
