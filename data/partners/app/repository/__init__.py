@@ -1,2 +1,0 @@
-from .partner_repository import PartnerRepository
-from .partner_repository import partner

@@ -1,1 +1,0 @@
-from .partner import Partner

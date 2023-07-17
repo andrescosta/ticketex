@@ -21,6 +21,7 @@ curl -X POST -H 'content-type:application/json' -d '{
 }' http://localhost:8000/v1/adventures
 
 curl -X PUT -H 'content-type:application/json' -d '{
+  "partner_id": "string",
   "name": "string",
   "description": "string",
   "tickets": [
@@ -29,17 +30,7 @@ curl -X PUT -H 'content-type:application/json' -d '{
       "type": "string"
     }
   ],
-  "venue": {
-    "name": "string",
-    "address": {
-      "zipcode": "string",
-      "street1": "string",
-      "street2": "string",
-      "country": "string",
-      "state": "string"
-    },
-    "phone": "string"
-  }
+  "venue_id": "aaaa"
 }' http://localhost:8000/v1/adventures/64776bfddf14350f6b0b8423
 
 curl -X GET http://localhost:8000/v1/adventures/64776bfddf14350f6b0b8423

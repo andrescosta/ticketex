@@ -7,7 +7,7 @@ loggers:
   app:
     level: DEBUG
     handlers: [console,errorConsole]
-    qualname: app_partner
+    qualname: app_venue
     propagate: 0
   tiklib:
     level: DEBUG

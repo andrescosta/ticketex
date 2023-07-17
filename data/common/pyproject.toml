@@ -1,0 +1,9 @@
+[project]
+name = "tiklib"
+version = "0.0.1"
+dependencies = [
+    'motor','pydantic','fastapi', 'PyJWT', 'cryptography'
+]
+
+[tool.setuptools.packages]
+find = {}

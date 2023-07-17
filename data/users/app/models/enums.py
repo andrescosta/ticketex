@@ -7,3 +7,7 @@ class ChannelType(str, Enum):
 
 class MessageType(str, Enum):
     TICKETS="tickets"
+
+class UserType(str, Enum):
+    PARTNER = "partner"
+    END_USER = "end_user"

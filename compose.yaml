@@ -23,11 +23,11 @@ services:
       - "8000:8000"
     depends_on:
       - mongo
-  partners:
-    image: ticketex/partners:latest
+  venues:
+    image: ticketex/venues:latest
     build:
       context: ./data
-      dockerfile: dockerfile-partners
+      dockerfile: dockerfile-venues
     networks:
       - backend
     environment:
@@ -100,7 +100,7 @@ services:
       - messaging
       - reservation
       - users
-      - partners
+      - venues
       - adventures
   postgres-db:
     image: postgres:15

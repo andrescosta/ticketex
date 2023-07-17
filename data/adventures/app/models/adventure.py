@@ -1,13 +1,11 @@
 from typing import List, Optional
 from app.models.address import Address
-from tiklib.models.entity import Entity
+from tiklib.models.partner_entity import PartnerEntity
 
 from app.models.ticket import Ticket
-from app.models.venue import Venue
 
-
-class Adventure(Entity):
+class Adventure(PartnerEntity):
     name: Optional[str]
     description: Optional[str]
     tickets: Optional[List[Ticket]]
-    venue: Optional[Venue]
+    venue_id: Optional[str]

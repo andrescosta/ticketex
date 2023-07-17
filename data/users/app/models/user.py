@@ -1,8 +1,8 @@
 from typing import List, Optional
-from app.models.address import Address
+from tiklib.models.address import Address
 from app.models.preference import Preference
 from tiklib.models.entity import Entity
-
+from app.models.enums import UserType
 
 class User(Entity):
     email: Optional[str]
@@ -11,3 +11,4 @@ class User(Entity):
     ext_id: Optional[str]
     preferences: Optional[List[Preference]]
     address: Optional[Address]
+    type: Optional[UserType]
