@@ -61,20 +61,7 @@ class EntityRepository:
             logger.debug(f"The {self.entity_name()} with id {id} was not found.")
             raise EntityNotFoundError(id, self.entity_type)
         else:
-            return await self.get(id)
-
-    async def update(self, id: str, entity: Entity) -> Entity:
-        entity_dict = self.for_saving(entity)
-        result = await self.collection().update_one(
-            {"_id": ObjectId(id)},
-            {"$set": entity_dict},
-        )
-        logger.debug(f"The {self.entity_name()} with id {id} was updated.")
-        if result.matched_count == 0:
-            logger.debug(f"The {self.entity_name()} with id {id} was not found.")
-            raise EntityNotFoundError(id, self.entity_type)
-        else:
-            return await self.get(id)
+            return await self.get(entity.partner_id, id)
 
     async def delete(self, partner_id: str, id: str) -> None:
         result = await self.collection().delete_one(
@@ -100,3 +87,18 @@ class EntityRepository:
         entity_dict = entity.dict(exclude_unset=True)
         entity_dict.pop("id", None)
         return entity_dict
+
+
+"""     async def update(self, id: str, entity: Entity) -> Entity:
+        entity_dict = self.for_saving(entity)
+        result = await self.collection().update_one(
+            {"_id": ObjectId(id)},
+            {"$set": entity_dict},
+        )
+        logger.debug(f"The {self.entity_name()} with id {id} was updated.")
+        if result.matched_count == 0:
+            logger.debug(f"The {self.entity_name()} with id {id} was not found.")
+            raise EntityNotFoundError(id, self.entity_type)
+        else:
+            return await self.get(id)
+ """
