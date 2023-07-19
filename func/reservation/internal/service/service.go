@@ -3,7 +3,7 @@ package service
 import (
 	"errors"
 
-	"github.com/andrescosta/ticketex/func/reservation/internal/config"
+	"github.com/andrescosta/ticketex/func/common/config"
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
 	"github.com/andrescosta/ticketex/func/reservation/internal/enums"
 	"github.com/andrescosta/ticketex/func/reservation/internal/repository"
@@ -17,6 +17,7 @@ type IReservationSvc interface {
 	AddMoreAvailability(reservationCapacity entity.ReservationCapacity) error
 	NewReservationTypeMetadata(reservationCapacity entity.ReservationCapacity) error
 	Get(reservation entity.Reservation) (entity.Reservation, error)
+	Update(reservation entity.Reservation, status enums.ReservationStatus) error
 	Reserve(reservation entity.Reservation) error
 	Paid(reservation entity.Reservation) error
 	Cancelled(reservation entity.Reservation) error
@@ -117,5 +118,18 @@ func (r *ReservationSvc) Cancelled(reservation entity.Reservation) error {
 		}
 	} else {
 		return err
+	}
+}
+
+func (r *ReservationSvc) Update(res entity.Reservation, status enums.ReservationStatus) error {
+	switch status {
+	case enums.Pending:
+		return rerrors.ErrIllegalReservationStatusPending
+	case enums.Reserved:
+		return r.Paid(res)
+	case enums.Canceled:
+		return r.Cancelled(res)
+	default:
+		return rerrors.ErrIllegalAvailability
 	}
 }

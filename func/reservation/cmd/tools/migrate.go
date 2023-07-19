@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/andrescosta/ticketex/func/reservation/internal/config"
+	"github.com/andrescosta/ticketex/func/common/config"
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

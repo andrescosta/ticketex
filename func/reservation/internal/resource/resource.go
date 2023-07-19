@@ -10,7 +10,8 @@ import (
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
 
-	"github.com/andrescosta/ticketex/func/reservation/internal/config"
+	"github.com/andrescosta/ticketex/func/common/config"
+	"github.com/andrescosta/ticketex/func/common/middleware"
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
 	"github.com/andrescosta/ticketex/func/reservation/internal/enums"
 	"github.com/andrescosta/ticketex/func/reservation/internal/model"
@@ -30,6 +31,7 @@ type IReservationResource interface {
 
 type ReservationResource struct {
 	service service.IReservationSvc
+	config  config.Config
 }
 
 func Init(config config.Config) (IReservationResource, error) {
@@ -40,6 +42,7 @@ func Init(config config.Config) (IReservationResource, error) {
 	}
 	reservation := &ReservationResource{
 		service: svc,
+		config:  config,
 	}
 
 	return reservation, nil
@@ -48,6 +51,8 @@ func Init(config config.Config) (IReservationResource, error) {
 func (rr ReservationResource) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
+	r.Use(middleware.EnsureValidToken(rr.config))
+
 	r.Post("/metadata", rr.Post)
 
 	r.Route("/{adventure_id}/capacities/{type}/users/{user_id}", func(r1 chi.Router) {
@@ -242,29 +247,12 @@ func (rr ReservationResource) PatchUser(w http.ResponseWriter, r *http.Request) 
 
 	status := enums.ToReservationUserStatus(chi.URLParam(r, "status"))
 
-	var err error
-
-	switch status {
-	case enums.Pending:
+	if err := rr.service.Update(res, status); err != nil {
 		rr.logError("Failed to update reservation", nil, r)
 		http.Error(w, "Failed to update reservation", http.StatusBadRequest)
-		return
-	case enums.Reserved:
-		err = rr.service.Paid(res)
-		if err != nil {
-			rr.logError("Failed to update reservation:", err, r)
-			http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
-			return
-		}
-	case enums.Canceled:
-		err = rr.service.Cancelled(res)
-		if err != nil {
-			rr.logError("Failed to update reservation:", err, r)
-			http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
-			return
-		}
+	} else {
+		w.WriteHeader(http.StatusOK)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (rr ReservationResource) logError(msg string, err error, r *http.Request) {

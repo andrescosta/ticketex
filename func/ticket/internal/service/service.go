@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/andrescosta/ticketex/func/common"
+	"github.com/andrescosta/ticketex/func/common/config"
 	"github.com/andrescosta/ticketex/func/ticket/internal/entity"
 	"github.com/andrescosta/ticketex/func/ticket/internal/enums"
 	"github.com/andrescosta/ticketex/func/ticket/internal/repository"

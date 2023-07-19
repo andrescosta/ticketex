@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/andrescosta/ticketex/func/reservation/internal/config"
+	"github.com/andrescosta/ticketex/func/common/config"
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
 	"github.com/andrescosta/ticketex/func/reservation/internal/enums"
 	"github.com/andrescosta/ticketex/func/reservation/internal/rerrors"
