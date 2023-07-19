@@ -79,3 +79,11 @@ func (c CustomClaims) HasScope(expectedScope string) bool {
 
 	return false
 }
+
+func GetClaims(r *http.Request, w http.ResponseWriter) validator.RegisteredClaims {
+	claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+	if !ok {
+		return validator.RegisteredClaims{}
+	}
+	return claims.RegisteredClaims
+}
