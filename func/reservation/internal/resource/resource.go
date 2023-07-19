@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
@@ -55,7 +57,7 @@ func (rr ReservationResource) Routes(logger zerolog.Logger) chi.Router {
 
 	r.Post("/metadata", rr.Post)
 
-	r.Route("/{adventure_id}/capacities/{type}/users/{user_id}", func(r1 chi.Router) {
+	r.Route("/{adventure_id}/capacities/{type}", func(r1 chi.Router) {
 		r1.Post("/", rr.PostUser)
 		r1.Get("/", rr.GetUser)
 		r1.Patch("/status/{status}", rr.PatchUser)
@@ -187,11 +189,15 @@ func (rr ReservationResource) PostCapacity(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusOK)
 }
 func (rr ReservationResource) GetUser(w http.ResponseWriter, r *http.Request) {
+	userid, ok := rr.getUserId(r, w)
+	if !ok {
+		return
+	}
 	rese, err := rr.service.Get(
 		entity.Reservation{
 			Adventure_id: chi.URLParam(r, "adventure_id"),
 			Type:         chi.URLParam(r, "type"),
-			User_id:      chi.URLParam(r, "user_id"),
+			User_id:      userid,
 		})
 
 	if err != nil {
@@ -214,10 +220,15 @@ func (rr ReservationResource) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
+	userid, ok := rr.getUserId(r, w)
+	if !ok {
+		return
+	}
+
 	res := entity.Reservation{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		Type:         chi.URLParam(r, "type"),
-		User_id:      chi.URLParam(r, "user_id"),
+		User_id:      userid,
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
@@ -239,14 +250,16 @@ func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rr ReservationResource) PatchUser(w http.ResponseWriter, r *http.Request) {
+	userid, ok := rr.getUserId(r, w)
+	if !ok {
+		return
+	}
 	res := entity.Reservation{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		Type:         chi.URLParam(r, "type"),
-		User_id:      chi.URLParam(r, "user_id"),
+		User_id:      userid,
 	}
-
 	status := enums.ToReservationUserStatus(chi.URLParam(r, "status"))
-
 	if err := rr.service.Update(res, status); err != nil {
 		rr.logError("Failed to update reservation", nil, r)
 		http.Error(w, "Failed to update reservation", http.StatusBadRequest)
@@ -261,4 +274,15 @@ func (rr ReservationResource) logError(msg string, err error, r *http.Request) {
 		msg = fmt.Sprint(msg, err)
 	}
 	oplog.Error().Msg(msg)
+}
+
+func (rr ReservationResource) getUserId(r *http.Request, w http.ResponseWriter) (string, bool) {
+	claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+	if !ok {
+		rr.logError("Failed to validate token", nil, r)
+		http.Error(w, "Failed to validate token", http.StatusUnauthorized)
+		return "", true
+	}
+	userid := claims.RegisteredClaims.Subject
+	return userid, false
 }

@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/andrescosta/ticketex/func/messaging/internal/model"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
@@ -29,7 +31,7 @@ func Init() (IMessagingResource, error) {
 func (rr MessagingResource) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
-	r.Route("/{user_id}", func(r2 chi.Router) {
+	r.Route("/", func(r2 chi.Router) {
 		r2.Post("/", rr.Post)
 	})
 	return r
@@ -37,6 +39,11 @@ func (rr MessagingResource) Routes(logger zerolog.Logger) chi.Router {
 
 func (rr MessagingResource) Post(w http.ResponseWriter, r *http.Request) {
 	var msg model.Message
+	userid, ok := rr.getUserId(r, w)
+	if !ok {
+		return
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
 		rr.logError("Failed to decode request body:", err, r)
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
@@ -44,7 +51,7 @@ func (rr MessagingResource) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	oplog := httplog.LogEntry(r.Context())
-	msg1 := fmt.Sprint("Message:", msg)
+	msg1 := fmt.Sprintf("USer: %s Message: %s", userid, msg)
 	oplog.Info().Msg(msg1)
 
 	w.WriteHeader(http.StatusOK)
@@ -57,4 +64,14 @@ func (rr MessagingResource) logError(msg string, err error, r *http.Request) {
 		msg = fmt.Sprint(msg, err)
 	}
 	oplog.Error().Msg(msg)
+}
+func (rr MessagingResource) getUserId(r *http.Request, w http.ResponseWriter) (string, bool) {
+	claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+	if !ok {
+		rr.logError("Failed to validate token", nil, r)
+		http.Error(w, "Failed to validate token", http.StatusUnauthorized)
+		return "", true
+	}
+	userid := claims.RegisteredClaims.Subject
+	return userid, false
 }

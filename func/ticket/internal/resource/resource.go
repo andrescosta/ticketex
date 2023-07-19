@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
@@ -45,7 +47,7 @@ func (rr TicketResource) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
 	r.Use(middleware.EnsureValidToken(rr.config))
-	r.Route("/{adventure_id}/{type}/{user_id}", func(r2 chi.Router) {
+	r.Route("/{adventure_id}/{type}", func(r2 chi.Router) {
 		r2.Post("/", rr.Post)
 		r2.Get("/", rr.Get)
 	})
@@ -53,9 +55,14 @@ func (rr TicketResource) Routes(logger zerolog.Logger) chi.Router {
 }
 
 func (rr TicketResource) Get(w http.ResponseWriter, r *http.Request) {
+	userid, ok := rr.getUserId(r, w)
+	if !ok {
+		return
+	}
+
 	tt := entity.TicketTrans{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
-		User_id:      chi.URLParam(r, "user_id"),
+		User_id:      userid,
 		Type:         chi.URLParam(r, "type")}
 	if ticketTrans, err := rr.service.GetTicketTrans(tt); err != nil {
 		rr.logError("Failed to get reservation:", err, r)
@@ -72,9 +79,14 @@ func (rr TicketResource) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rr TicketResource) Post(w http.ResponseWriter, r *http.Request) {
+	userid, ok := rr.getUserId(r, w)
+	if !ok {
+		return
+	}
+
 	tt := entity.TicketTrans{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
-		User_id:      chi.URLParam(r, "user_id"),
+		User_id:      userid,
 		Type:         chi.URLParam(r, "type"),
 	}
 
@@ -119,4 +131,15 @@ func (rr TicketResource) logError(msg string, err error, r *http.Request) {
 		msg = fmt.Sprint(msg, err)
 	}
 	oplog.Error().Msg(msg)
+}
+
+func (rr TicketResource) getUserId(r *http.Request, w http.ResponseWriter) (string, bool) {
+	claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+	if !ok {
+		rr.logError("Failed to validate token", nil, r)
+		http.Error(w, "Failed to validate token", http.StatusUnauthorized)
+		return "", true
+	}
+	userid := claims.RegisteredClaims.Subject
+	return userid, false
 }
