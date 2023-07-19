@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
-	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
@@ -95,19 +93,7 @@ func (rr ReservationResource) getReservation(res entity.ReservationMetadata, w h
 	if reservation, err := rr.service.GetMetadata(res.Adventure_id); err != nil {
 		return model.ReservationMetadata{}, err
 	} else {
-		rreservation := model.ReservationMetadata{
-			Adventure_id: reservation.Adventure_id,
-			Status:       enums.ReservationMetadataStatus(reservation.Status),
-		}
-		var capacities []model.Capacity
-		for _, v := range reservation.Capacities {
-			capacity := model.Capacity{
-				Type:         v.Type,
-				Availability: v.Availability,
-			}
-			capacities = append(capacities, capacity)
-		}
-		rreservation.Capacity = capacities
+		rreservation := rr.toReservationMetadataModel(reservation)
 		return rreservation, nil
 	}
 }
@@ -119,18 +105,7 @@ func (rr ReservationResource) Post(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
-	var newReservationCapacities []entity.ReservationCapacity
-	var newReservation entity.ReservationMetadata
-	newReservation.Adventure_id = mReservation.Adventure_id
-	newReservation.Status = uint(mReservation.Status)
-	for _, v := range mReservation.Capacity {
-		var newReservationCapacity entity.ReservationCapacity
-		newReservationCapacity.Adventure_id = mReservation.Adventure_id
-		newReservationCapacity.Availability = v.Availability
-		newReservationCapacity.Type = v.Type
-		newReservationCapacities = append(newReservationCapacities, newReservationCapacity)
-	}
-	newReservation.Capacities = newReservationCapacities
+	newReservation := rr.toReservationMetadataEntity(mReservation)
 	err := rr.service.NewReservationMetadata(newReservation)
 	if err != nil {
 		rr.logError("Failed to create reservation:", err, r)
@@ -189,7 +164,7 @@ func (rr ReservationResource) PostCapacity(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusOK)
 }
 func (rr ReservationResource) GetUser(w http.ResponseWriter, r *http.Request) {
-	userid, ok := rr.getUserId(r, w)
+	userid, ok := rr.getUserIdFromJWT(r, w)
 	if !ok {
 		return
 	}
@@ -220,7 +195,7 @@ func (rr ReservationResource) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
-	userid, ok := rr.getUserId(r, w)
+	userid, ok := rr.getUserIdFromJWT(r, w)
 	if !ok {
 		return
 	}
@@ -250,7 +225,7 @@ func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rr ReservationResource) PatchUser(w http.ResponseWriter, r *http.Request) {
-	userid, ok := rr.getUserId(r, w)
+	userid, ok := rr.getUserIdFromJWT(r, w)
 	if !ok {
 		return
 	}
@@ -276,13 +251,46 @@ func (rr ReservationResource) logError(msg string, err error, r *http.Request) {
 	oplog.Error().Msg(msg)
 }
 
-func (rr ReservationResource) getUserId(r *http.Request, w http.ResponseWriter) (string, bool) {
-	claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
-	if !ok {
+func (rr ReservationResource) getUserIdFromJWT(r *http.Request, w http.ResponseWriter) (string, bool) {
+	claims := middleware.GetClaims(r, w)
+	userid := claims.Subject
+	if userid == "" {
 		rr.logError("Failed to validate token", nil, r)
 		http.Error(w, "Failed to validate token", http.StatusUnauthorized)
-		return "", true
+		return "", false
 	}
-	userid := claims.RegisteredClaims.Subject
-	return userid, false
+	return userid, true
+}
+
+func (ReservationResource) toReservationMetadataEntity(mReservation model.ReservationMetadata) entity.ReservationMetadata {
+	var newReservationCapacities []entity.ReservationCapacity
+	var newReservation entity.ReservationMetadata
+	newReservation.Adventure_id = mReservation.Adventure_id
+	newReservation.Status = uint(mReservation.Status)
+	for _, v := range mReservation.Capacity {
+		var newReservationCapacity entity.ReservationCapacity
+		newReservationCapacity.Adventure_id = mReservation.Adventure_id
+		newReservationCapacity.Availability = v.Availability
+		newReservationCapacity.Type = v.Type
+		newReservationCapacities = append(newReservationCapacities, newReservationCapacity)
+	}
+	newReservation.Capacities = newReservationCapacities
+	return newReservation
+}
+
+func (ReservationResource) toReservationMetadataModel(reservation entity.ReservationMetadata) model.ReservationMetadata {
+	rreservation := model.ReservationMetadata{
+		Adventure_id: reservation.Adventure_id,
+		Status:       enums.ReservationMetadataStatus(reservation.Status),
+	}
+	var capacities []model.Capacity
+	for _, v := range reservation.Capacities {
+		capacity := model.Capacity{
+			Type:         v.Type,
+			Availability: v.Availability,
+		}
+		capacities = append(capacities, capacity)
+	}
+	rreservation.Capacity = capacities
+	return rreservation
 }

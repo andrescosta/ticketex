@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/andrescosta/ticketex/func/messaging/internal/config"
+	"github.com/andrescosta/ticketex/func/common/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog"
@@ -14,7 +14,7 @@ import (
 
 func main() {
 	config := config.Load("../config.json")
-	if msg, err := resource.Init(); err == nil {
+	if msg, err := resource.Init(config); err == nil {
 		router := chi.NewRouter()
 		router.Use(middleware.Logger)
 

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
-	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
@@ -134,12 +132,12 @@ func (rr TicketResource) logError(msg string, err error, r *http.Request) {
 }
 
 func (rr TicketResource) getUserId(r *http.Request, w http.ResponseWriter) (string, bool) {
-	claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
-	if !ok {
+	claims := middleware.GetClaims(r, w)
+	userid := claims.Subject
+	if userid == "" {
 		rr.logError("Failed to validate token", nil, r)
 		http.Error(w, "Failed to validate token", http.StatusUnauthorized)
-		return "", true
+		return "", false
 	}
-	userid := claims.RegisteredClaims.Subject
-	return userid, false
+	return userid, true
 }
