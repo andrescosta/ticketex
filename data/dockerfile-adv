@@ -1,14 +1,16 @@
-FROM python:3.11
+FROM python:3.11.4-slim-bookworm
+
 WORKDIR /code
+ENV VIRTUALENV=/home/realpython/venv
+RUN python3 -m venv $VIRTUALENV
+ENV PATH="$VIRTUALENV/bin:$PATH"
 COPY ./requirements.txt /code/requirements.txt
 COPY ./common/tiklib /code/common/tiklib
-COPY ./common/setup.py /code/common
-COPY ./common/requirements.txt /code/common
+COPY ./common/pyproject.toml /code/common
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 WORKDIR /code/common
-RUN pip install --no-cache-dir --upgrade -r /code/common/requirements.txt
-RUN python setup.py install
+RUN pip install .
 WORKDIR /code
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 COPY ./adventures/app /code/app
 COPY ./adventures/.env /code/
 COPY ./adventures/logging.yaml /code/

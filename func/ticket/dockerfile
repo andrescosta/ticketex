@@ -26,6 +26,9 @@ COPY --from=builder /app/migrate .
 EXPOSE 8282
 ENV postgress_dsn="host=host.docker.internal user=postgres password=mysecretpassword dbname=ticket sslmode=disable"
 ENV host=":8282"
+ENV auth0_domain="dev-fuueygkrz81birix.us.auth0.com"
+ENV auth0_audience="https://int.ticketex.com"
+
 
 # Run the Go application
 CMD ["sh","-c", "./migrate && ./app"]
