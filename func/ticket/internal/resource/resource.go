@@ -9,7 +9,8 @@ import (
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
 
-	"github.com/andrescosta/ticketex/func/ticket/internal/config"
+	"github.com/andrescosta/ticketex/func/common/config"
+	"github.com/andrescosta/ticketex/func/common/middleware"
 	"github.com/andrescosta/ticketex/func/ticket/internal/entity"
 	"github.com/andrescosta/ticketex/func/ticket/internal/model"
 	"github.com/andrescosta/ticketex/func/ticket/internal/service"
@@ -23,6 +24,7 @@ type ITicketResource interface {
 
 type TicketResource struct {
 	service service.ITicketSvc
+	config  config.Config
 }
 
 func Init(config config.Config) (ITicketResource, error) {
@@ -33,6 +35,7 @@ func Init(config config.Config) (ITicketResource, error) {
 	}
 	reservation := &TicketResource{
 		service: svc,
+		config:  config,
 	}
 
 	return reservation, nil
@@ -41,6 +44,7 @@ func Init(config config.Config) (ITicketResource, error) {
 func (rr TicketResource) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
+	r.Use(middleware.EnsureValidToken(rr.config))
 	r.Route("/{adventure_id}/{type}/{user_id}", func(r2 chi.Router) {
 		r2.Post("/", rr.Post)
 		r2.Get("/", rr.Get)

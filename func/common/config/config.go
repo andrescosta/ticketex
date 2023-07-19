@@ -9,9 +9,11 @@ import (
 )
 
 type Config struct {
-	PostgressDsn string `json:"postgress_dsn"`
-	Host         string `json:"host"`
-	DebugSql     bool   `json:"debug_sql"`
+	PostgressDsn  string `json:"postgress_dsn"`
+	Host          string `json:"host"`
+	DebugSql      bool   `json:"debug_sql"`
+	Auth0Domain   string `json:"auth0_domain"`
+	Auth0Audience string `json:"auth0_audience"`
 }
 
 func Load(fileName string) Config {

@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog"
 
-	"github.com/andrescosta/ticketex/func/ticket/internal/config"
+	"github.com/andrescosta/ticketex/func/ticket/common/config"
 	"github.com/andrescosta/ticketex/func/ticket/internal/resource"
 )
 
