@@ -2,7 +2,8 @@
 *.dtmp
 *.bak
 backup/
-
+http/
+*.http
 *.*~
 api2/
 *.exe

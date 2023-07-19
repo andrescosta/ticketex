@@ -9,8 +9,7 @@ import (
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
 
-	"github.com/andrescosta/ticketex/func/common/config"
-	"github.com/andrescosta/ticketex/func/common/middleware"
+	"github.com/andrescosta/ticketex/func/common"
 	"github.com/andrescosta/ticketex/func/ticket/internal/entity"
 	"github.com/andrescosta/ticketex/func/ticket/internal/model"
 	"github.com/andrescosta/ticketex/func/ticket/internal/service"
