@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
-
+// TODO Remove
 type IReservation interface {
 	GetReservationMetadata(adventureId string) (entity.ReservationMetadata, error)
 	GetReservation(reservation entity.Reservation) (entity.Reservation, error)
@@ -119,6 +119,7 @@ func (d *Reservation) reserveIfAvailableCapacity(reservationUser entity.Reservat
 	result := tx.Raw(`SELECT availability FROM reservation_capacities 
 						WHERE availability>0 and availability>=? and adventure_id=? and 
 							  type=? and deleted_at is null FOR UPDATE;`,
+	// TODO: check https://stackoverflow.com/questions/75761088/in-postgres-is-there-a-need-to-lock-a-row-in-a-table-using-for-update-if-the-qu#:~:text=Database%20locks%20are%20handled%20by,avoided%2C%20and%20locks%20handled%20properly.
 		reservationUser.Quantity, reservationUser.Adventure_id, reservationUser.Type).Scan(&availability)
 	if result.Error != nil {
 		tx.Rollback()
