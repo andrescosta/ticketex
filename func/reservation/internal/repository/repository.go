@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -9,33 +10,28 @@ import (
 	"github.com/andrescosta/ticketex/func/reservation/internal/config"
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
 	"github.com/andrescosta/ticketex/func/reservation/internal/enums"
-	"github.com/andrescosta/ticketex/func/reservation/internal/rerrors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
-// TODO Remove
-type IReservation interface {
-	GetReservationMetadata(adventureId string) (entity.ReservationMetadata, error)
-	GetReservation(reservation entity.Reservation) (entity.Reservation, error)
-	GetReservationUnscoped(reservation entity.Reservation) (entity.Reservation, error)
-	AddReservationMetadata(reservation entity.ReservationMetadata) error
-	UpdateReservationMetadata(reservation entity.ReservationMetadata) error
-	ReserveIfAvailableCapacity(reservation entity.Reservation) error
-	ReserveAndRecycleIfAvailableCapacity(reservation entity.Reservation) error
-	UpdateReservationCapacity(reservationCapacity entity.ReservationCapacity) error
-	AddReservationCapacity(reservationCapacity entity.ReservationCapacity) error
-	CreateReservation(reservationCapacity entity.Reservation) error
-	UpdateReservation(reservationUser entity.Reservation) error
-	CancelReservation(reservationUser entity.Reservation) error
-	AddMoreAvailability(reservationCapacity entity.ReservationCapacity) error
-}
+
+var (
+	ErrOutOfCapacity                    = errors.New("no room")
+	ErrUpdateCapacity                   = errors.New("capacity not found")
+	ErrUpdateReservation                = errors.New("reservation not found")
+	ErrIllegalAvailability              = errors.New("illegal availability")
+	ErrIllegalReservationStatusCanceled = errors.New("illegal reservation status: canceled")
+	ErrIllegalReservationStatusReserved = errors.New("illegal reservation status: reserved")
+	ErrIllegalReservationStatusDeleted  = errors.New("illegal reservation status: deleted")
+	ErrIllegalReservationStatusPending  = errors.New("illegal reservation status: pending")
+	ErrIllegalReservationStatus         = errors.New("illegal reservation status: ")
+)
 
 type Reservation struct {
 	DB *gorm.DB
 }
 
-func Init(config config.Config) (IReservation, error) {
+func New(config config.Config) (*Reservation, error) {
 	dataAccess := &Reservation{}
 	loglevel := logger.Error
 	if config.DebugSql {
@@ -119,7 +115,7 @@ func (d *Reservation) reserveIfAvailableCapacity(reservationUser entity.Reservat
 	result := tx.Raw(`SELECT availability FROM reservation_capacities 
 						WHERE availability>0 and availability>=? and adventure_id=? and 
 							  type=? and deleted_at is null FOR UPDATE;`,
-	// TODO: check https://stackoverflow.com/questions/75761088/in-postgres-is-there-a-need-to-lock-a-row-in-a-table-using-for-update-if-the-qu#:~:text=Database%20locks%20are%20handled%20by,avoided%2C%20and%20locks%20handled%20properly.
+		// TODO: check https://stackoverflow.com/questions/75761088/in-postgres-is-there-a-need-to-lock-a-row-in-a-table-using-for-update-if-the-qu#:~:text=Database%20locks%20are%20handled%20by,avoided%2C%20and%20locks%20handled%20properly.
 		reservationUser.Quantity, reservationUser.Adventure_id, reservationUser.Type).Scan(&availability)
 	if result.Error != nil {
 		tx.Rollback()
@@ -127,7 +123,7 @@ func (d *Reservation) reserveIfAvailableCapacity(reservationUser entity.Reservat
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return rerrors.ErrOutOfCapacity
+		return ErrOutOfCapacity
 	}
 	availability = availability - reservationUser.Quantity
 	result = tx.Exec(`UPDATE reservation_capacities 
@@ -140,7 +136,7 @@ func (d *Reservation) reserveIfAvailableCapacity(reservationUser entity.Reservat
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return rerrors.ErrUpdateCapacity
+		return ErrUpdateCapacity
 	}
 	if update {
 		reservationUser.DeletedAt = gorm.DeletedAt{Valid: false}
@@ -195,7 +191,7 @@ func (d *Reservation) CancelReservation(reservationUser entity.Reservation) erro
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return rerrors.ErrUpdateCapacity
+		return ErrUpdateCapacity
 	}
 	availability = availability + reservationUser.Quantity
 	result = tx.Exec(`UPDATE reservation_capacities 
@@ -208,13 +204,13 @@ func (d *Reservation) CancelReservation(reservationUser entity.Reservation) erro
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return rerrors.ErrUpdateCapacity
+		return ErrUpdateCapacity
 	}
 	reservationUser.Status = enums.Canceled
 	result = tx.Updates(&reservationUser)
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return rerrors.ErrUpdateReservation
+		return ErrUpdateReservation
 	}
 	if result.Error != nil {
 		tx.Rollback()
@@ -243,11 +239,11 @@ func (d *Reservation) AddMoreAvailability(reservationCapacity entity.Reservation
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return rerrors.ErrIllegalAvailability
+		return ErrIllegalAvailability
 	}
 	if reservationCapacity.Availability < uint(availability) {
 		tx.Rollback()
-		return rerrors.ErrIllegalAvailability
+		return ErrIllegalAvailability
 	}
 	result = tx.Exec(`UPDATE reservation_capacities 
 						SET availability=? 
@@ -259,7 +255,7 @@ func (d *Reservation) AddMoreAvailability(reservationCapacity entity.Reservation
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return rerrors.ErrUpdateCapacity
+		return ErrUpdateCapacity
 	}
 	return tx.Commit().Error
 }

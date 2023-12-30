@@ -14,38 +14,28 @@ import (
 	"github.com/andrescosta/ticketex/func/reservation/internal/entity"
 	"github.com/andrescosta/ticketex/func/reservation/internal/enums"
 	"github.com/andrescosta/ticketex/func/reservation/internal/model"
-	"github.com/andrescosta/ticketex/func/reservation/internal/rerrors"
+	"github.com/andrescosta/ticketex/func/reservation/internal/repository"
 	"github.com/andrescosta/ticketex/func/reservation/internal/service"
 )
 
-type IReservationResource interface {
-	Get(w http.ResponseWriter, r *http.Request)
-	Post(w http.ResponseWriter, r *http.Request)
-	PatchCapacity(w http.ResponseWriter, r *http.Request)
-	PostCapacity(w http.ResponseWriter, r *http.Request)
-	PostUser(w http.ResponseWriter, r *http.Request)
-	PatchUser(w http.ResponseWriter, r *http.Request)
-	Routes(logger zerolog.Logger) chi.Router
+type Reservation struct {
+	service *service.Reservation
 }
 
-type ReservationResource struct {
-	service service.IReservationSvc
-}
+func New(config config.Config) (*Reservation, error) {
 
-func Init(config config.Config) (IReservationResource, error) {
-
-	svc, err := service.Init(config)
+	svc, err := service.New(config)
 	if err != nil {
 		return nil, err
 	}
-	reservation := &ReservationResource{
+	reservation := &Reservation{
 		service: svc,
 	}
 
 	return reservation, nil
 }
 
-func (rr ReservationResource) Routes(logger zerolog.Logger) chi.Router {
+func (rr Reservation) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
 	r.Post("/metadata", rr.Post)
@@ -69,7 +59,7 @@ func (rr ReservationResource) Routes(logger zerolog.Logger) chi.Router {
 	return r
 }
 
-func (rr ReservationResource) Get(w http.ResponseWriter, r *http.Request) {
+func (rr Reservation) Get(w http.ResponseWriter, r *http.Request) {
 	res := entity.ReservationMetadata{Adventure_id: chi.URLParam(r, "adventure_id")}
 	if reservation, err := rr.getReservation(res, w); err != nil {
 		rr.logError("Failed to get reservation:", err, r)
@@ -84,7 +74,7 @@ func (rr ReservationResource) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rr ReservationResource) getReservation(res entity.ReservationMetadata, w http.ResponseWriter) (model.ReservationMetadata, error) {
+func (rr Reservation) getReservation(res entity.ReservationMetadata, w http.ResponseWriter) (model.ReservationMetadata, error) {
 	if reservation, err := rr.service.GetMetadata(res.Adventure_id); err != nil {
 		return model.ReservationMetadata{}, err
 	} else {
@@ -105,7 +95,7 @@ func (rr ReservationResource) getReservation(res entity.ReservationMetadata, w h
 	}
 }
 
-func (rr ReservationResource) Post(w http.ResponseWriter, r *http.Request) {
+func (rr Reservation) Post(w http.ResponseWriter, r *http.Request) {
 	var mReservation model.ReservationMetadata
 	if err := json.NewDecoder(r.Body).Decode(&mReservation); err != nil {
 		rr.logError("Failed to decode request body:", err, r)
@@ -135,7 +125,7 @@ func (rr ReservationResource) Post(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(&mReservation)
 }
 
-func (rr ReservationResource) PatchCapacity(w http.ResponseWriter, r *http.Request) {
+func (rr Reservation) PatchCapacity(w http.ResponseWriter, r *http.Request) {
 	res := entity.ReservationCapacity{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		Type:         chi.URLParam(r, "type"),
@@ -150,7 +140,7 @@ func (rr ReservationResource) PatchCapacity(w http.ResponseWriter, r *http.Reque
 	err := rr.service.AddMoreAvailability(res)
 	if err != nil {
 		rr.logError("Error updating capacity:", err, r)
-		if errors.Is(err, rerrors.ErrIllegalAvailability) {
+		if errors.Is(err, repository.ErrIllegalAvailability) {
 			http.Error(w, "Illegal availability.", http.StatusBadRequest)
 		} else {
 			http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
@@ -161,7 +151,7 @@ func (rr ReservationResource) PatchCapacity(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
-func (rr ReservationResource) PostCapacity(w http.ResponseWriter, r *http.Request) {
+func (rr Reservation) PostCapacity(w http.ResponseWriter, r *http.Request) {
 	res := entity.ReservationCapacity{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 	}
@@ -181,7 +171,7 @@ func (rr ReservationResource) PostCapacity(w http.ResponseWriter, r *http.Reques
 
 	w.WriteHeader(http.StatusOK)
 }
-func (rr ReservationResource) GetUser(w http.ResponseWriter, r *http.Request) {
+func (rr Reservation) GetUser(w http.ResponseWriter, r *http.Request) {
 	rese, err := rr.service.Get(
 		entity.Reservation{
 			Adventure_id: chi.URLParam(r, "adventure_id"),
@@ -208,7 +198,7 @@ func (rr ReservationResource) GetUser(w http.ResponseWriter, r *http.Request) {
 		})
 }
 
-func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
+func (rr Reservation) PostUser(w http.ResponseWriter, r *http.Request) {
 	res := entity.Reservation{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		Type:         chi.URLParam(r, "type"),
@@ -233,7 +223,7 @@ func (rr ReservationResource) PostUser(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(&res)
 }
 
-func (rr ReservationResource) PatchUser(w http.ResponseWriter, r *http.Request) {
+func (rr Reservation) PatchUser(w http.ResponseWriter, r *http.Request) {
 	res := entity.Reservation{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		Type:         chi.URLParam(r, "type"),
@@ -267,7 +257,7 @@ func (rr ReservationResource) PatchUser(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (rr ReservationResource) logError(msg string, err error, r *http.Request) {
+func (rr Reservation) logError(msg string, err error, r *http.Request) {
 	oplog := httplog.LogEntry(r.Context())
 	if err != nil {
 		msg = fmt.Sprint(msg, err)

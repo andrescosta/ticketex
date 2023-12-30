@@ -11,34 +11,29 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type IMessagingResource interface {
-	Post(w http.ResponseWriter, r *http.Request)
-	Routes(logger zerolog.Logger) chi.Router
+type Messaging struct {
 }
 
-type MessagingResource struct {
-}
+func New() (*Messaging, error) {
 
-func Init() (IMessagingResource, error) {
-
-	reservation := &MessagingResource{}
+	reservation := &Messaging{}
 
 	return reservation, nil
 }
 
-func (rr MessagingResource) Routes(logger zerolog.Logger) chi.Router {
+func (m Messaging) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
 	r.Route("/{user_id}", func(r2 chi.Router) {
-		r2.Post("/", rr.Post)
+		r2.Post("/", m.Post)
 	})
 	return r
 }
 
-func (rr MessagingResource) Post(w http.ResponseWriter, r *http.Request) {
+func (m Messaging) Post(w http.ResponseWriter, r *http.Request) {
 	var msg model.Message
 	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-		rr.logError("Failed to decode request body:", err, r)
+		m.logError("Failed to decode request body:", err, r)
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
@@ -51,7 +46,7 @@ func (rr MessagingResource) Post(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-func (rr MessagingResource) logError(msg string, err error, r *http.Request) {
+func (m Messaging) logError(msg string, err error, r *http.Request) {
 	oplog := httplog.LogEntry(r.Context())
 	if err != nil {
 		msg = fmt.Sprint(msg, err)

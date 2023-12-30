@@ -8,27 +8,21 @@ import (
 	"go.jetpack.io/typeid"
 )
 
-type ITicketSvc interface {
-	GenerateTickets(ticketTrans entity.TicketTrans) (entity.TicketTrans, error)
-	UpdateTicketTrans(ticketTrans entity.TicketTrans) error
-	GetTicketTrans(ticketTrans entity.TicketTrans) (entity.TicketTrans, error)
+type Ticket struct {
+	repo *repository.Ticket
 }
 
-type TicketSvc struct {
-	repo repository.ITicket
-}
-
-func Init(config config.Config) (ITicketSvc, error) {
-	if repo, err := repository.Init(config); err != nil {
+func New(config config.Config) (*Ticket, error) {
+	if repo, err := repository.New(config); err != nil {
 		return nil, err
 	} else {
-		return &TicketSvc{
+		return &Ticket{
 			repo: repo,
 		}, nil
 	}
 }
 
-func (r *TicketSvc) GenerateTickets(ticketTrans entity.TicketTrans) (entity.TicketTrans, error) {
+func (r *Ticket) GenerateTickets(ticketTrans entity.TicketTrans) (entity.TicketTrans, error) {
 	// This method will validate with the external payment platform the TX ID
 	ticketTrans.Status = enums.Validated
 	ticketTrans.Tickets = make([]entity.Ticket, ticketTrans.Quantity)
@@ -54,10 +48,10 @@ func (r *TicketSvc) GenerateTickets(ticketTrans entity.TicketTrans) (entity.Tick
 	}
 }
 
-func (r *TicketSvc) UpdateTicketTrans(ticketTrans entity.TicketTrans) error {
+func (r *Ticket) UpdateTicketTrans(ticketTrans entity.TicketTrans) error {
 	return r.repo.UpdateTicketTrans(ticketTrans)
 }
 
-func (r *TicketSvc) GetTicketTrans(ticketTrans entity.TicketTrans) (entity.TicketTrans, error) {
+func (r *Ticket) GetTicketTrans(ticketTrans entity.TicketTrans) (entity.TicketTrans, error) {
 	return r.repo.GetTicketTrans(ticketTrans)
 }

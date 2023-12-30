@@ -12,17 +12,11 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-type ITicket interface {
-	GetTicketTrans(ticketTransq entity.TicketTrans) (entity.TicketTrans, error)
-	NewTicketTrans(ticketTrans entity.TicketTrans) error
-	UpdateTicketTrans(ticketTrans entity.TicketTrans) error
-}
-
 type Ticket struct {
 	DB *gorm.DB
 }
 
-func Init(config config.Config) (ITicket, error) {
+func New(config config.Config) (*Ticket, error) {
 	dataAccess := &Ticket{}
 	loglevel := logger.Error
 	if config.DebugSql {

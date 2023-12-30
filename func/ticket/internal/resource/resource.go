@@ -15,30 +15,24 @@ import (
 	"github.com/andrescosta/ticketex/func/ticket/internal/service"
 )
 
-type ITicketResource interface {
-	Get(w http.ResponseWriter, r *http.Request)
-	Post(w http.ResponseWriter, r *http.Request)
-	Routes(logger zerolog.Logger) chi.Router
+type Ticket struct {
+	service *service.Ticket
 }
 
-type TicketResource struct {
-	service service.ITicketSvc
-}
+func New(config config.Config) (*Ticket, error) {
 
-func Init(config config.Config) (ITicketResource, error) {
-
-	svc, err := service.Init(config)
+	svc, err := service.New(config)
 	if err != nil {
 		return nil, err
 	}
-	reservation := &TicketResource{
+	reservation := &Ticket{
 		service: svc,
 	}
 
 	return reservation, nil
 }
 
-func (rr TicketResource) Routes(logger zerolog.Logger) chi.Router {
+func (rr Ticket) Routes(logger zerolog.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(httplog.RequestLogger(logger))
 	r.Route("/{adventure_id}/{type}/{user_id}", func(r2 chi.Router) {
@@ -48,7 +42,7 @@ func (rr TicketResource) Routes(logger zerolog.Logger) chi.Router {
 	return r
 }
 
-func (rr TicketResource) Get(w http.ResponseWriter, r *http.Request) {
+func (rr Ticket) Get(w http.ResponseWriter, r *http.Request) {
 	tt := entity.TicketTrans{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		User_id:      chi.URLParam(r, "user_id"),
@@ -67,7 +61,7 @@ func (rr TicketResource) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rr TicketResource) Post(w http.ResponseWriter, r *http.Request) {
+func (rr Ticket) Post(w http.ResponseWriter, r *http.Request) {
 	tt := entity.TicketTrans{
 		Adventure_id: chi.URLParam(r, "adventure_id"),
 		User_id:      chi.URLParam(r, "user_id"),
@@ -91,7 +85,7 @@ func (rr TicketResource) Post(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(&res)
 }
 
-func (TicketResource) buildTrans(tt entity.TicketTrans) model.TicketTrans {
+func (Ticket) buildTrans(tt entity.TicketTrans) model.TicketTrans {
 	res := model.TicketTrans{
 		Adventure_id: tt.Adventure_id,
 		User_id:      tt.User_id,
@@ -109,7 +103,7 @@ func (TicketResource) buildTrans(tt entity.TicketTrans) model.TicketTrans {
 	return res
 }
 
-func (rr TicketResource) logError(msg string, err error, r *http.Request) {
+func (rr Ticket) logError(msg string, err error, r *http.Request) {
 	oplog := httplog.LogEntry(r.Context())
 	if err != nil {
 		msg = fmt.Sprint(msg, err)

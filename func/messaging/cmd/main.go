@@ -14,7 +14,7 @@ import (
 
 func main() {
 	config := config.Load("../config.json")
-	if msg, err := resource.Init(); err == nil {
+	if msg, err := resource.New(); err == nil {
 		router := chi.NewRouter()
 		router.Use(middleware.Logger)
 
