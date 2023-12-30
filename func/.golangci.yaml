@@ -20,9 +20,10 @@ run:
   allow-parallel-runners: true
 
 # goimports does not like proto files generated on windows
-# - 'goimports' 
+#  
 linters:
   enable:
+  - 'goimports'
   - 'asciicheck'
   #- 'depguard'
   - 'bodyclose'
@@ -38,7 +39,7 @@ linters:
   - 'gosec'
   - 'gosimple'
   - 'govet'
-  #- 'gci'
+  - 'gci'
   - 'ineffassign'
   - 'makezero'
   - 'misspell'

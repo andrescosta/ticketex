@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/andrescosta/ticketex/func/internal/reservation/enums"
+	"github.com/andrescosta/ticketex/func/internal/reservation/enum"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +19,7 @@ type ReservationMetadata struct {
 type ReservationCapacity struct {
 	AdventureID  string `gorm:"primaryKey"`
 	Type         string `gorm:"primaryKey"`
-	Status       enums.ReservationMetadataStatus
+	Status       enum.ReservationMetadataStatus
 	Availability uint
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
@@ -31,7 +31,7 @@ type Reservation struct {
 	UserID      string `gorm:"primaryKey"`
 	Type        string `gorm:"primaryKey"`
 	Quantity    uint
-	Status      enums.ReservationStatus
+	Status      enum.ReservationStatus
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

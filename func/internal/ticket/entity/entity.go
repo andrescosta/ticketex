@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/andrescosta/ticketex/func/internal/ticket/enums"
+	"github.com/andrescosta/ticketex/func/internal/ticket/enum"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +13,7 @@ type TicketTrans struct {
 	Type           string `gorm:"primaryKey"`
 	CreditCardTXID string
 	Quantity       uint
-	Status         enums.TransactionStatus
+	Status         enum.TransactionStatus
 	Tickets        []Ticket `gorm:"foreignKey:Adventure_id,User_id,Type"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

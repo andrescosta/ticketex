@@ -5,7 +5,7 @@ import (
 
 	"github.com/andrescosta/ticketex/func/internal/config"
 	"github.com/andrescosta/ticketex/func/internal/reservation/entity"
-	"github.com/andrescosta/ticketex/func/internal/reservation/enums"
+	"github.com/andrescosta/ticketex/func/internal/reservation/enum"
 	"github.com/andrescosta/ticketex/func/internal/reservation/repository"
 	"gorm.io/gorm"
 )
@@ -49,7 +49,7 @@ func (r *Reservation) Reserve(reservation entity.Reservation) error {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			res = reservation
-			res.Status = enums.Pending
+			res.Status = enum.Pending
 			return r.repo.ReserveIfAvailableCapacity(reservation)
 		}
 		return err
@@ -58,13 +58,13 @@ func (r *Reservation) Reserve(reservation entity.Reservation) error {
 		return repository.ErrIllegalReservationStatusDeleted
 	}
 	switch res.Status {
-	case enums.Canceled:
-		res.Status = enums.Pending
+	case enum.Canceled:
+		res.Status = enum.Pending
 		res.Quantity = reservation.Quantity
 		return r.repo.ReserveAndRecycleIfAvailableCapacity(res)
-	case enums.Reserved:
+	case enum.Reserved:
 		return repository.ErrIllegalReservationStatusReserved
-	case enums.Pending:
+	case enum.Pending:
 		return repository.ErrIllegalReservationStatusPending
 	default:
 		return repository.ErrIllegalReservationStatus
@@ -74,12 +74,12 @@ func (r *Reservation) Reserve(reservation entity.Reservation) error {
 func (r *Reservation) Paid(reservation entity.Reservation) error {
 	if res, err := r.repo.GetReservation(reservation); err == nil {
 		switch res.Status {
-		case enums.Canceled:
+		case enum.Canceled:
 			return repository.ErrIllegalReservationStatusCanceled
-		case enums.Reserved:
+		case enum.Reserved:
 			return repository.ErrIllegalReservationStatusReserved
-		case enums.Pending:
-			res.Status = enums.Reserved
+		case enum.Pending:
+			res.Status = enum.Reserved
 			return r.repo.UpdateReservation(res)
 		default:
 			return repository.ErrIllegalReservationStatus
@@ -92,11 +92,11 @@ func (r *Reservation) Paid(reservation entity.Reservation) error {
 func (r *Reservation) Cancelled(reservation entity.Reservation) error {
 	if res, err := r.repo.GetReservation(reservation); err == nil {
 		switch res.Status {
-		case enums.Canceled:
+		case enum.Canceled:
 			return repository.ErrIllegalReservationStatusCanceled
-		case enums.Reserved:
+		case enum.Reserved:
 			return repository.ErrIllegalReservationStatusReserved
-		case enums.Pending:
+		case enum.Pending:
 			return r.repo.CancelReservation(res)
 		default:
 			return repository.ErrIllegalReservationStatus

@@ -9,7 +9,7 @@ import (
 
 	"github.com/andrescosta/ticketex/func/internal/config"
 	"github.com/andrescosta/ticketex/func/internal/reservation/entity"
-	"github.com/andrescosta/ticketex/func/internal/reservation/enums"
+	"github.com/andrescosta/ticketex/func/internal/reservation/enum"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -212,7 +212,7 @@ func (d *Reservation) CancelReservation(reservationUser entity.Reservation) erro
 		tx.Rollback()
 		return ErrUpdateCapacity
 	}
-	reservationUser.Status = enums.Canceled
+	reservationUser.Status = enum.Canceled
 	result = tx.Updates(&reservationUser)
 	if result.RowsAffected == 0 {
 		tx.Rollback()

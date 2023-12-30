@@ -12,7 +12,7 @@ import (
 
 	"github.com/andrescosta/ticketex/func/internal/config"
 	"github.com/andrescosta/ticketex/func/internal/reservation/entity"
-	"github.com/andrescosta/ticketex/func/internal/reservation/enums"
+	"github.com/andrescosta/ticketex/func/internal/reservation/enum"
 	"github.com/andrescosta/ticketex/func/internal/reservation/model"
 	"github.com/andrescosta/ticketex/func/internal/reservation/repository"
 	"github.com/andrescosta/ticketex/func/internal/reservation/service"
@@ -80,7 +80,7 @@ func (rr Reservation) getReservation(res entity.ReservationMetadata, _ http.Resp
 	}
 	rreservation := model.ReservationMetadata{
 		AdventureID: reservation.AdventureID,
-		Status:      enums.ReservationMetadataStatus(reservation.Status),
+		Status:      enum.ReservationMetadataStatus(reservation.Status),
 	}
 	capacities := make([]model.Capacity, len(reservation.Capacities))
 	for idx, v := range reservation.Capacities {
@@ -209,7 +209,7 @@ func (rr Reservation) PostUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
-	res.Status = enums.Pending
+	res.Status = enum.Pending
 	err := rr.service.Reserve(res)
 	if err != nil {
 		rr.logError("Failed to create reservation:", err, r)
@@ -229,23 +229,23 @@ func (rr Reservation) PatchUser(w http.ResponseWriter, r *http.Request) {
 		UserID:      chi.URLParam(r, "user_id"),
 	}
 
-	status := enums.ToReservationUserStatus(chi.URLParam(r, "status"))
+	status := enum.ToReservationUserStatus(chi.URLParam(r, "status"))
 
 	var err error
 
 	switch status {
-	case enums.Pending:
+	case enum.Pending:
 		rr.logError("Failed to update reservation", nil, r)
 		http.Error(w, "Failed to update reservation", http.StatusBadRequest)
 		return
-	case enums.Reserved:
+	case enum.Reserved:
 		err = rr.service.Paid(res)
 		if err != nil {
 			rr.logError("Failed to update reservation:", err, r)
 			http.Error(w, "Failed to update reservation", http.StatusInternalServerError)
 			return
 		}
-	case enums.Canceled:
+	case enum.Canceled:
 		err = rr.service.Cancelled(res)
 		if err != nil {
 			rr.logError("Failed to update reservation:", err, r)
